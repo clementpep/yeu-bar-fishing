@@ -1,0 +1,55 @@
+# Déploiement — Bar d'Yeu (Dokploy + Docker Compose)
+
+Déploiement sur VPS via **Dokploy** (PaaS auto-hébergé). Traefik (intégré à Dokploy)
+gère le reverse proxy et le **HTTPS Let's Encrypt** automatiquement — pas de nginx ni
+certbot à configurer.
+
+> ⚠️ Le HTTPS est **indispensable** : la PWA (service worker + « Ajouter à l'écran
+> d'accueil » iOS/Android) ne fonctionne qu'en contexte sécurisé.
+
+## Artefacts du repo
+- `Dockerfile` — build multi-stage (compile `better-sqlite3`, build SvelteKit adapter-node, prune des devDeps).
+- `docker-compose.yml` — service `app` (port 3000), volume `baryeu-data` pour la base SQLite.
+- `scripts/migrate.js` — applique les migrations Drizzle au démarrage (deps de prod uniquement).
+- `.dockerignore` — exclut node_modules, build, *.sqlite, docs, etc.
+
+## Variables d'environnement (onglet *Environment* de Dokploy)
+| Variable | Valeur | Rôle |
+|---|---|---|
+| `ORIGIN` | `https://ton-domaine.fr` | **Obligatoire** (adapter-node : URLs/CSRF). Doit = domaine HTTPS final. |
+| `DATABASE_PATH` | `/data/data.sqlite` | Base persistée sur le volume (déjà dans le compose). |
+
+`PORT`, `HOST`, `PROTOCOL_HEADER`, `HOST_HEADER` sont déjà fixés dans le compose.
+
+## Étapes Dokploy
+1. **Créer le projet** → *Create Service* → type **Compose**.
+2. **Source** : connecter le repo GitHub `clementpep/yeu-bar-fishing`, branche
+   (`feat/plan-1-fondations` pour tester, `main` une fois mergé). Dokploy lit le
+   `docker-compose.yml` à la racine.
+3. **Environment** : ajouter `ORIGIN=https://ton-domaine.fr`.
+4. **Domains** : ajouter le (sous-)domaine, le router vers le service **`app`**, port
+   **3000**, et **activer HTTPS** (Let's Encrypt). ⚠️ Le DNS du (sous-)domaine doit
+   déjà pointer (enregistrement A) vers l'IP du VPS avant d'émettre le certificat.
+5. **Deploy**. Dokploy build l'image et lance le conteneur. Au démarrage, les
+   migrations s'appliquent (`scripts/migrate.js`) puis le serveur Node démarre.
+6. Vérifier : ouvrir `https://ton-domaine.fr` → l'app se charge ; tester
+   l'installation PWA sur iPhone (Safari → Partager → Sur l'écran d'accueil) et sur
+   Android (Chrome → menu → Installer l'application).
+
+## Redéploiements
+À chaque release (push sur la branche suivie), relancer un **Deploy** dans Dokploy
+(ou activer l'auto-deploy par webhook). Les nouvelles migrations Drizzle sont
+appliquées automatiquement au démarrage du conteneur. Le volume `baryeu-data`
+conserve la base entre les déploiements.
+
+## Vérification locale (optionnelle, avant de pousser)
+```bash
+docker compose build           # build l'image
+ORIGIN=http://localhost:3000 docker compose up   # lance en local
+# puis http://localhost:3000
+```
+
+## Sauvegarde de la base
+La base vit dans le volume `baryeu-data` (`/data/data.sqlite`). Pense à une sauvegarde
+périodique de ce volume (snapshot Dokploy/VPS) — c'est là que sont les comptes et les
+carnets de prises.

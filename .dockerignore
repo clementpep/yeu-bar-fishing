@@ -1,0 +1,14 @@
+.git
+node_modules
+build
+.svelte-kit
+.vite
+coverage
+*.sqlite
+*.sqlite-*
+.env
+.env.*
+docs
+tasks
+npm-debug.log*
+.DS_Store

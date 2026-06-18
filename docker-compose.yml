@@ -1,0 +1,28 @@
+# Déploiement via Dokploy (type "Compose").
+# Le reverse proxy + HTTPS (Let's Encrypt) sont gérés par le Traefik de Dokploy :
+# dans l'UI, attache un domaine au service "app" sur le port 3000 et active HTTPS.
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - HOST=0.0.0.0
+      # ORIGIN : ton domaine HTTPS final (OBLIGATOIRE pour adapter-node : URLs/CSRF).
+      # Défini dans l'onglet Environment de Dokploy.
+      - ORIGIN=${ORIGIN}
+      # Derrière le proxy Traefik de Dokploy :
+      - PROTOCOL_HEADER=x-forwarded-proto
+      - HOST_HEADER=x-forwarded-host
+      # Base SQLite persistée sur un volume (survit aux redéploiements) :
+      - DATABASE_PATH=/data/data.sqlite
+    volumes:
+      - baryeu-data:/data
+    expose:
+      - "3000"
+
+volumes:
+  baryeu-data:
