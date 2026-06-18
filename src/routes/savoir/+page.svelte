@@ -1,2 +1,9 @@
-<h1>Savoir</h1>
-<p>Techniques, stratégies et réglementation (à venir).</p>
+<script lang="ts">
+	import PagePlaceholder from '$lib/components/ui/PagePlaceholder.svelte';
+</script>
+
+<PagePlaceholder
+	kicker="Bibliothèque"
+	title="Savoir"
+	body="Techniques, montages illustrés, stratégies et réglementation — bientôt disponibles, en fiches interactives et quiz."
+/>

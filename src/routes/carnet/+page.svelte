@@ -1,2 +1,9 @@
-<h1>Carnet</h1>
-<p>Vos prises et records (à venir).</p>
+<script lang="ts">
+	import PagePlaceholder from '$lib/components/ui/PagePlaceholder.svelte';
+</script>
+
+<PagePlaceholder
+	kicker="Prises & records"
+	title="Carnet"
+	body="La saisie de vos prises, la capture automatique des conditions et vos records arrivent bientôt."
+/>
