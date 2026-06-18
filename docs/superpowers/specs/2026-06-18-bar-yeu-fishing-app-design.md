@@ -18,13 +18,13 @@ L'app est utilisée par **deux pêcheurs** (le père de Clément et son ami). El
 
 ## 2. Utilisateurs & objectifs
 
-- **Profil** : 2 pêcheurs amateurs passionnés, usage iPhone (Safari) en priorité, souvent **sur l'eau sans réseau**.
+- **Profil** : 2 pêcheurs amateurs passionnés, usage iPhone (Safari) en priorité **mais Android (Chrome) comme cible de premier rang également**, souvent **sur l'eau sans réseau**.
 - **Objectifs utilisateurs** :
   - Savoir quand et comment pêcher le bar à l'île d'Yeu.
   - Apprendre / réviser les techniques sans s'ennuyer.
   - Garder une trace de ses prises et se mesurer (amicalement) à l'autre.
 - **Critères de succès** :
-  - Utilisable et agréable sur iPhone Safari, installable écran d'accueil.
+  - Utilisable et agréable **aussi bien sur iPhone (Safari) que sur Android (Chrome)**, installable sur l'écran d'accueil des deux (icône adaptative/maskable côté Android).
   - Fonctionne **hors-ligne** pour le carnet et le contenu éducatif.
   - Design ressenti comme « premium » et distinctif, pas templated.
   - Conseils de conditions perçus comme **utiles et fiables**.
@@ -151,7 +151,7 @@ Records & classement = **vues / requêtes calculées** sur `catch` (pas de déno
 
 - **Mobile-first strict** : zones de tap larges, navigation au pouce, ergonomie une main.
 - **Lisibilité plein soleil** : contraste élevé, tailles généreuses.
-- **Safari iOS impeccable** : safe areas (encoche / barre), pas de bugs de viewport, installable écran d'accueil avec icône et splash soignés.
+- **Safari iOS ET Chrome Android impeccables** : safe areas (encoche / barre iOS, barre de navigation gestuelle Android) via `env(safe-area-inset-*)`, pas de bugs de viewport (`100dvh`, `viewport-fit=cover`), installable sur l'écran d'accueil des deux plateformes avec icône et splash soignés. Côté Android : icône **maskable** (adaptive icon) et `theme_color`/`background_color` dans le manifest ; ne pas dépendre de comportements webkit-only.
 - **Performance** : bundles légers, rendu rapide même en réseau faible ; offline gracieux.
 - **Accessibilité** : contraste AA minimum, focus visibles, tailles de police respectées.
 
@@ -186,5 +186,5 @@ Records & classement = **vues / requêtes calculées** sur `catch` (pas de déno
 - **Unitaires** : calcul lune, calcul/parse marées, logique du score de pêche, validation maille (42 cm), agrégations records/classement.
 - **Intégration** : routes API (auth, prises, conditions), cache cron.
 - **Front** : composants critiques (courbe de marée, jauge de score, formulaire de prise).
-- **Manuel ciblé** : rendu et ergonomie **Safari iOS** (safe areas, installation PWA, offline).
+- **Manuel ciblé multi-plateforme** : rendu et ergonomie sur **Safari iOS** ET **Chrome Android** (safe areas/encoche/barre gestuelle, viewport `100dvh`, installation PWA + icône maskable Android, splash, offline). Vérifier l'installabilité (Lighthouse PWA) sur les deux.
 - TDD appliqué sur la logique métier (lune, marée, score, validation).
