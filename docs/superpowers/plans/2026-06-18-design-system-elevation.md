@@ -54,7 +54,9 @@ src/
 │   │       ├── TideCurve.svelte              (CREATE)
 │   │       ├── TideCurve.test.ts             (CREATE)
 │   │       ├── ScoreGauge.svelte             (CREATE)
-│   │       └── ScoreGauge.test.ts            (CREATE)
+│   │       ├── ScoreGauge.test.ts            (CREATE)
+│   │       ├── PagePlaceholder.svelte        (CREATE)
+│   │       └── PagePlaceholder.test.ts       (CREATE)
 │   └── ...
 ├── routes/
 │   ├── +page.svelte                          (MODIFY : écran « Le moment » vitrine)
@@ -922,7 +924,7 @@ Expected: FAIL — `StatTile.svelte` introuvable.
 <div class="stat">
 	{#if icon}<span class="stat-icon">{@render icon()}</span>{/if}
 	<span class="stat-value tabular-nums">
-		{value}{#if unit}<span class="stat-unit">{unit}</span>{/if}
+		<span class="stat-number">{value}</span>{#if unit}<span class="stat-unit">{unit}</span>{/if}
 	</span>
 	<span class="stat-label">{label}</span>
 </div>
@@ -1700,33 +1702,67 @@ git commit -m "feat(moment): écran « Le moment » vitrine sur données factice
 
 ---
 
-### Task 9: Placeholders soignés + vérification finale
+### Task 9: Placeholders soignés (composant partagé) + vérification finale
 
 **Files:**
+- Create: `src/lib/components/ui/PagePlaceholder.svelte`, `src/lib/components/ui/PagePlaceholder.test.ts`
 - Modify: `src/routes/savoir/+page.svelte`, `src/routes/carnet/+page.svelte`, `src/routes/duel/+page.svelte`, `src/routes/profil/+page.svelte`
 
 **Interfaces:**
 - Consumes: `Card` (Task 4).
-- Produces : 4 écrans placeholder cohérents avec le langage visuel (titre éditorial + carte « à venir »).
+- Produces : `PagePlaceholder` props : `kicker: string`, `title: string`, `body: string`. Rend un en-tête éditorial (kicker + titre) + une `Card` contenant le texte « à venir ». Les 4 écrans secondaires l'utilisent (DRY — pas de style dupliqué).
 
-- [ ] **Step 1: Réécrire `src/routes/savoir/+page.svelte`**
+- [ ] **Step 1: Écrire le test de PagePlaceholder (échoue)**
+
+Create `src/lib/components/ui/PagePlaceholder.test.ts`:
+```ts
+import { describe, it, expect } from 'vitest';
+import { render, screen } from '@testing-library/svelte';
+import PagePlaceholder from './PagePlaceholder.svelte';
+
+describe('PagePlaceholder', () => {
+	it('rend le kicker, le titre et le corps', () => {
+		render(PagePlaceholder, {
+			props: { kicker: 'Bibliothèque', title: 'Savoir', body: 'Bientôt disponible.' }
+		});
+		expect(screen.getByText('Bibliothèque')).toBeInTheDocument();
+		expect(screen.getByRole('heading', { name: 'Savoir' })).toBeInTheDocument();
+		expect(screen.getByText('Bientôt disponible.')).toBeInTheDocument();
+	});
+});
+```
+
+- [ ] **Step 2: Lancer et vérifier l'échec**
+
+Run: `npm test -- run src/lib/components/ui/PagePlaceholder.test.ts`
+Expected: FAIL — `PagePlaceholder.svelte` introuvable.
+
+- [ ] **Step 3: Implémenter `src/lib/components/ui/PagePlaceholder.svelte`**
 
 ```svelte
 <script lang="ts">
-	import Card from '$lib/components/ui/Card.svelte';
+	import Card from './Card.svelte';
+
+	let { kicker, title, body }: {
+		kicker: string;
+		title: string;
+		body: string;
+	} = $props();
 </script>
 
 <header class="page-header">
-	<p class="page-kicker">Bibliothèque</p>
-	<h1>Savoir</h1>
+	<p class="page-kicker">{kicker}</p>
+	<h1>{title}</h1>
 </header>
 
 <Card>
-	<p class="coming">Techniques, montages illustrés, stratégies et réglementation — bientôt disponibles, en fiches interactives et quiz.</p>
+	<p class="coming">{body}</p>
 </Card>
 
 <style>
-	.page-header { margin-bottom: var(--space-2); }
+	.page-header {
+		margin-bottom: var(--space-2);
+	}
 	.page-kicker {
 		font-size: var(--text-sm);
 		letter-spacing: var(--tracking-wide);
@@ -1734,111 +1770,85 @@ git commit -m "feat(moment): écran « Le moment » vitrine sur données factice
 		color: var(--text-faint);
 		margin-bottom: var(--space-1);
 	}
-	.page-header h1 { font-size: var(--text-2xl); }
-	.coming { color: var(--text-secondary); line-height: var(--leading-normal); }
+	.page-header h1 {
+		font-size: var(--text-2xl);
+	}
+	.coming {
+		color: var(--text-secondary);
+		line-height: var(--leading-normal);
+	}
 </style>
 ```
 
-- [ ] **Step 2: Réécrire `src/routes/carnet/+page.svelte`**
+- [ ] **Step 4: Lancer et vérifier le succès**
 
+Run: `npm test -- run src/lib/components/ui/PagePlaceholder.test.ts`
+Expected: PASS (1 test).
+
+- [ ] **Step 5: Réécrire les 4 écrans secondaires via le composant**
+
+`src/routes/savoir/+page.svelte` :
 ```svelte
 <script lang="ts">
-	import Card from '$lib/components/ui/Card.svelte';
+	import PagePlaceholder from '$lib/components/ui/PagePlaceholder.svelte';
 </script>
 
-<header class="page-header">
-	<p class="page-kicker">Prises & records</p>
-	<h1>Carnet</h1>
-</header>
-
-<Card>
-	<p class="coming">La saisie de vos prises, la capture automatique des conditions et vos records arrivent bientôt.</p>
-</Card>
-
-<style>
-	.page-header { margin-bottom: var(--space-2); }
-	.page-kicker {
-		font-size: var(--text-sm);
-		letter-spacing: var(--tracking-wide);
-		text-transform: uppercase;
-		color: var(--text-faint);
-		margin-bottom: var(--space-1);
-	}
-	.page-header h1 { font-size: var(--text-2xl); }
-	.coming { color: var(--text-secondary); line-height: var(--leading-normal); }
-</style>
+<PagePlaceholder
+	kicker="Bibliothèque"
+	title="Savoir"
+	body="Techniques, montages illustrés, stratégies et réglementation — bientôt disponibles, en fiches interactives et quiz."
+/>
 ```
 
-- [ ] **Step 3: Réécrire `src/routes/duel/+page.svelte`**
-
+`src/routes/carnet/+page.svelte` :
 ```svelte
 <script lang="ts">
-	import Card from '$lib/components/ui/Card.svelte';
+	import PagePlaceholder from '$lib/components/ui/PagePlaceholder.svelte';
 </script>
 
-<header class="page-header">
-	<p class="page-kicker">Classement amical</p>
-	<h1>Duel</h1>
-</header>
-
-<Card>
-	<p class="coming">Le classement, les badges et les défis hebdomadaires entre pêcheurs arrivent bientôt.</p>
-</Card>
-
-<style>
-	.page-header { margin-bottom: var(--space-2); }
-	.page-kicker {
-		font-size: var(--text-sm);
-		letter-spacing: var(--tracking-wide);
-		text-transform: uppercase;
-		color: var(--text-faint);
-		margin-bottom: var(--space-1);
-	}
-	.page-header h1 { font-size: var(--text-2xl); }
-	.coming { color: var(--text-secondary); line-height: var(--leading-normal); }
-</style>
+<PagePlaceholder
+	kicker="Prises & records"
+	title="Carnet"
+	body="La saisie de vos prises, la capture automatique des conditions et vos records arrivent bientôt."
+/>
 ```
 
-- [ ] **Step 4: Réécrire `src/routes/profil/+page.svelte`**
-
+`src/routes/duel/+page.svelte` :
 ```svelte
 <script lang="ts">
-	import Card from '$lib/components/ui/Card.svelte';
+	import PagePlaceholder from '$lib/components/ui/PagePlaceholder.svelte';
 </script>
 
-<header class="page-header">
-	<p class="page-kicker">Compte</p>
-	<h1>Profil</h1>
-</header>
-
-<Card>
-	<p class="coming">Votre compte, vos records, vos badges et les réglages arriveront avec l'authentification (Plan 2).</p>
-</Card>
-
-<style>
-	.page-header { margin-bottom: var(--space-2); }
-	.page-kicker {
-		font-size: var(--text-sm);
-		letter-spacing: var(--tracking-wide);
-		text-transform: uppercase;
-		color: var(--text-faint);
-		margin-bottom: var(--space-1);
-	}
-	.page-header h1 { font-size: var(--text-2xl); }
-	.coming { color: var(--text-secondary); line-height: var(--leading-normal); }
-</style>
+<PagePlaceholder
+	kicker="Classement amical"
+	title="Duel"
+	body="Le classement, les badges et les défis hebdomadaires entre pêcheurs arrivent bientôt."
+/>
 ```
 
-- [ ] **Step 5: Vérification finale complète**
+`src/routes/profil/+page.svelte` :
+```svelte
+<script lang="ts">
+	import PagePlaceholder from '$lib/components/ui/PagePlaceholder.svelte';
+</script>
+
+<PagePlaceholder
+	kicker="Compte"
+	title="Profil"
+	body="Votre compte, vos records, vos badges et les réglages arriveront avec l'authentification (Plan 2)."
+/>
+```
+
+- [ ] **Step 6: Vérification finale complète**
 
 Run: `npm test -- run && npm run build && npm run check`
-Expected: tous les tests PASS (tokens 5, Button 3, Card 2, TabBar 3, StatTile 2, TideCurve 3, ScoreGauge 4, db 1, smoke 1 = 24), build OK, check 0 erreur.
+Expected: tous les tests PASS (tokens 5, Button 3, Card 2, TabBar 3, StatTile 2, TideCurve 3, ScoreGauge 4, PagePlaceholder 1, db 1, smoke 1 = 25), build OK, check 0 erreur.
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
-git add src/routes/savoir/+page.svelte src/routes/carnet/+page.svelte src/routes/duel/+page.svelte src/routes/profil/+page.svelte
-git commit -m "feat(ui): placeholders Savoir/Carnet/Duel/Profil cohérents avec le langage visuel"
+git add src/lib/components/ui/PagePlaceholder.svelte src/lib/components/ui/PagePlaceholder.test.ts src/routes/savoir/+page.svelte src/routes/carnet/+page.svelte src/routes/duel/+page.svelte src/routes/profil/+page.svelte
+git commit -m "feat(ui): PagePlaceholder partagé + écrans Savoir/Carnet/Duel/Profil cohérents"
 ```
 
 ---
