@@ -12,3 +12,13 @@ export const users = sqliteTable('users', {
 
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
+
+export const sessions = sqliteTable('sessions', {
+	id: text('id').primaryKey(),
+	userId: text('user_id')
+		.notNull()
+		.references(() => users.id),
+	expiresAt: integer('expires_at', { mode: 'timestamp' }).notNull()
+});
+
+export type Session = typeof sessions.$inferSelect;
