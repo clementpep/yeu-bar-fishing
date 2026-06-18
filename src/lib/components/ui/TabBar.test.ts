@@ -31,4 +31,13 @@ describe('TabBar', () => {
 		const lien = screen.getByText('Carnet').closest('a');
 		expect(lien?.getAttribute('aria-current')).toBe('page');
 	});
+
+	it('marque les icônes comme décoratives (aria-hidden)', () => {
+		render(TabBar);
+		const liens = screen.getAllByRole('link');
+		for (const lien of liens) {
+			const iconSpan = lien.querySelector('.tab-icon');
+			expect(iconSpan?.getAttribute('aria-hidden')).toBe('true');
+		}
+	});
 });

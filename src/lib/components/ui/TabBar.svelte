@@ -28,7 +28,7 @@
 			class:active
 			aria-current={active ? 'page' : undefined}
 		>
-			<span class="tab-icon"><Icon /></span>
+			<span class="tab-icon" aria-hidden="true"><Icon /></span>
 			<span class="tab-label">{tab.label}</span>
 		</a>
 	{/each}
@@ -45,7 +45,7 @@
 		background: var(--surface-raised);
 		border-top: 1px solid var(--border-subtle);
 		padding-bottom: env(safe-area-inset-bottom);
-		box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.25);
+		box-shadow: var(--elevation-bar);
 		z-index: 10;
 	}
 	.tab {
