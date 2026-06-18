@@ -16,4 +16,8 @@ describe('design tokens', () => {
   it('cssVar handles camelCase keys by converting to kebab-case', () => {
     expect(cssVar('color.depthsLight')).toBe('var(--color-depths-light)');
   });
+
+  it('cssVar converts shadow.md to correct CSS variable reference', () => {
+    expect(cssVar('shadow.md')).toBe('var(--shadow-md)');
+  });
 });

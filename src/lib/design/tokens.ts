@@ -25,6 +25,9 @@ export const tokens = {
   font: {
     display: '"Fraunces Variable", Georgia, serif',
     body: '"Inter Variable", system-ui, sans-serif'
+  },
+  shadow: {
+    md: '0 6px 24px rgba(0, 0, 0, 0.35)'
   }
 } as const;
 
