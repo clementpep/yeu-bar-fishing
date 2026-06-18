@@ -13,21 +13,40 @@ export const tokens = {
     success: '#4FA083'
   },
   space: {
-    '1': '4px',
-    '2': '8px',
-    '3': '12px',
-    '4': '16px',
-    '6': '24px',
-    '8': '32px',
-    '12': '48px',
-    '16': '64px'
+    '1': '4px', '2': '8px', '3': '12px', '4': '16px',
+    '6': '24px', '8': '32px', '12': '48px', '16': '64px'
   },
   font: {
     display: '"Fraunces Variable", Georgia, serif',
     body: '"Inter Variable", system-ui, sans-serif'
   },
-  shadow: {
-    md: '0 6px 24px rgba(0, 0, 0, 0.35)'
+  text: {
+    xs: '0.75rem',
+    sm: '0.875rem',
+    base: '1rem',
+    lg: '1.125rem',
+    xl: '1.375rem',
+    '2xl': '1.75rem',
+    '3xl': '2.25rem',
+    display: '3rem',
+    score: 'clamp(3.5rem, 18vw, 5rem)'
+  },
+  leading: { tight: '1.1', snug: '1.3', normal: '1.5' },
+  tracking: { tight: '-0.02em', normal: '0', wide: '0.08em' },
+  radius: { sm: '8px', md: '12px', lg: '16px', xl: '24px', full: '999px' },
+  elevation: {
+    '1': '0 1px 2px rgba(0, 0, 0, 0.4)',
+    '2': '0 4px 16px rgba(0, 0, 0, 0.4)',
+    '3': '0 12px 32px rgba(0, 0, 0, 0.5)'
+  },
+  shadow: { md: '0 4px 16px rgba(0, 0, 0, 0.4)' },
+  motion: {
+    durFast: '120ms',
+    durBase: '240ms',
+    durSlow: '480ms',
+    easeOut: 'cubic-bezier(0.22, 1, 0.36, 1)',
+    easeSpring: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
+    easeStandard: 'cubic-bezier(0.4, 0, 0.2, 1)'
   }
 } as const;
 
