@@ -13,33 +13,37 @@
 	const PAD_TOP = 18;
 	const PAD_BOTTOM = 26;
 
-	const heights = points.map((p) => p.height);
-	const min = Math.min(...heights);
-	const max = Math.max(...heights);
-	const span = max - min || 1;
+	// Dérivés des props : $derived pour rester réactifs (données live du Plan 3) et éviter
+	// les warnings state_referenced_locally. xAt/yAt sont des fonctions (lues au rendu, OK).
+	const min = $derived(Math.min(...points.map((p) => p.height)));
+	const max = $derived(Math.max(...points.map((p) => p.height)));
+	const span = $derived(max - min || 1);
 
 	const xAt = (i: number) =>
 		PAD_X + (points.length > 1 ? (i / (points.length - 1)) * (W - PAD_X * 2) : 0);
 	const yAt = (h: number) =>
 		PAD_TOP + (1 - (h - min) / span) * (H - PAD_TOP - PAD_BOTTOM);
 
-	const linePath = points
-		.map((p, i) => `${i === 0 ? 'M' : 'L'}${xAt(i).toFixed(1)} ${yAt(p.height).toFixed(1)}`)
-		.join(' ');
-	const areaPath = `${linePath} L${xAt(points.length - 1).toFixed(1)} ${H} L${xAt(0).toFixed(1)} ${H} Z`;
+	const linePath = $derived(
+		points
+			.map((p, i) => `${i === 0 ? 'M' : 'L'}${xAt(i).toFixed(1)} ${yAt(p.height).toFixed(1)}`)
+			.join(' ')
+	);
+	const areaPath = $derived(
+		`${linePath} L${xAt(points.length - 1).toFixed(1)} ${H} L${xAt(0).toFixed(1)} ${H} Z`
+	);
 
-	const clampedNow = Math.max(0, Math.min(1, nowFraction));
-	const nowPos = clampedNow * (points.length - 1);
-	const i0 = Math.floor(nowPos);
-	const i1 = Math.min(i0 + 1, points.length - 1);
-	const frac = nowPos - i0;
-	const nowHeight = points[i0].height + (points[i1].height - points[i0].height) * frac;
-	const nowX = xAt(i0) + (xAt(i1) - xAt(i0)) * frac;
-	const nowY = yAt(nowHeight);
+	const now = $derived.by(() => {
+		const clampedNow = Math.max(0, Math.min(1, nowFraction));
+		const pos = clampedNow * (points.length - 1);
+		const i0 = Math.floor(pos);
+		const i1 = Math.min(i0 + 1, points.length - 1);
+		const frac = pos - i0;
+		const height = points[i0].height + (points[i1].height - points[i0].height) * frac;
+		return { x: xAt(i0) + (xAt(i1) - xAt(i0)) * frac, y: yAt(height) };
+	});
 
-	const etales = points
-		.map((p, i) => ({ ...p, i }))
-		.filter((p) => p.type);
+	const etales = $derived(points.map((p, i) => ({ ...p, i })).filter((p) => p.type));
 </script>
 
 <figure class="tide">
@@ -73,15 +77,15 @@
 
 		<line
 			data-now
-			x1={nowX}
+			x1={now.x}
 			y1={PAD_TOP - 6}
-			x2={nowX}
+			x2={now.x}
 			y2={H - PAD_BOTTOM}
 			stroke="var(--text-faint)"
 			stroke-width="1"
 			stroke-dasharray="3 3"
 		/>
-		<circle data-now-dot cx={nowX} cy={nowY} r="4" fill="var(--text-primary)" />
+		<circle data-now-dot cx={now.x} cy={now.y} r="4" fill="var(--text-primary)" />
 	</svg>
 
 	<ul class="tide-etales">
