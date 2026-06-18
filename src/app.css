@@ -59,6 +59,7 @@
   --text-faint: rgba(157, 178, 190, 0.6);
   --accent: var(--color-brass);
   --accent-soft: var(--color-sand);
+  --accent-tint: rgba(201, 162, 75, 0.16);
   --score-low: var(--color-danger);
   --score-mid: var(--color-brass);
   --score-high: var(--color-success);
