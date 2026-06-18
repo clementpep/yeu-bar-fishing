@@ -1,0 +1,25 @@
+import { describe, it, expect, vi } from 'vitest';
+import { render, screen } from '@testing-library/svelte';
+import { readable } from 'svelte/store';
+import TabBar from './TabBar.svelte';
+
+vi.mock('$app/stores', () => ({
+  page: readable({ url: new URL('http://localhost/carnet') })
+}));
+
+describe('TabBar', () => {
+  it('rend les 5 onglets', () => {
+    render(TabBar);
+    expect(screen.getByText('Le moment')).toBeInTheDocument();
+    expect(screen.getByText('Savoir')).toBeInTheDocument();
+    expect(screen.getByText('Carnet')).toBeInTheDocument();
+    expect(screen.getByText('Duel')).toBeInTheDocument();
+    expect(screen.getByText('Profil')).toBeInTheDocument();
+  });
+
+  it('marque l\'onglet courant (carnet) comme actif', () => {
+    render(TabBar);
+    const lien = screen.getByText('Carnet').closest('a');
+    expect(lien?.getAttribute('aria-current')).toBe('page');
+  });
+});

@@ -1,12 +1,21 @@
 <script lang="ts">
-	import favicon from '$lib/assets/favicon.svg';
 	import '../app.css';
-
-	let { children } = $props();
+	import TabBar from '$lib/components/ui/TabBar.svelte';
+	let { children }: { children?: any } = $props();
 </script>
 
-<svelte:head>
-	<link rel="icon" href={favicon} />
-</svelte:head>
+<div class="app-shell">
+	<main>{@render children?.()}</main>
+	<TabBar />
+</div>
 
-{@render children()}
+<style>
+	.app-shell { min-height: 100dvh; }
+	main {
+		padding: var(--space-6) var(--space-4);
+		padding-top: max(var(--space-6), env(safe-area-inset-top));
+		padding-bottom: calc(64px + env(safe-area-inset-bottom));
+		max-width: 640px;
+		margin: 0 auto;
+	}
+</style>
