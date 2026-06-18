@@ -53,3 +53,21 @@ ORIGIN=http://localhost:3000 docker compose up   # lance en local
 La base vit dans le volume `baryeu-data` (`/data/data.sqlite`). Pense à une sauvegarde
 périodique de ce volume (snapshot Dokploy/VPS) — c'est là que sont les comptes et les
 carnets de prises.
+
+## Dépannage
+
+### 404 sur le domaine (TLS OK mais page « Not Found »)
+Un **404 vient de Traefik** = aucune route ne correspond au host (≠ 502 qui voudrait dire
+conteneur injoignable). Vérifier, dans l'ordre :
+1. **Domains** (UI Dokploy) : domaine → service **`app`**, port **3000**, HTTPS activé.
+2. **Réseau** : le service doit être sur **`dokploy-network`** (le réseau de Traefik). Il est
+   désormais déclaré dans `docker-compose.yml` (`networks: [dokploy-network]`, `external: true`).
+   Redéployer après ce changement.
+3. **Logs** du conteneur : build terminé ✅, conteneur **Running**, message
+   `[migrate] migrations appliquées sur /data/data.sqlite` puis démarrage du serveur Node.
+   Si `migrate.js` plante → volume `/data` non monté/inscriptible.
+4. **`ORIGIN`** défini dans *Environment* = `https://<domaine>` exact.
+
+### 502 / Bad Gateway
+Le router existe mais le backend ne répond pas : conteneur en crash-loop (voir Logs) ou
+mauvais port (doit être `3000`).

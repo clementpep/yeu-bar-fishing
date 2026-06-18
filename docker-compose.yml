@@ -1,6 +1,8 @@
 # Déploiement via Dokploy (type "Compose").
 # Le reverse proxy + HTTPS (Let's Encrypt) sont gérés par le Traefik de Dokploy :
 # dans l'UI, attache un domaine au service "app" sur le port 3000 et active HTTPS.
+# Le service rejoint le réseau "dokploy-network" pour être routable par Traefik
+# (sinon un 404 « no router » est renvoyé même si le conteneur tourne).
 services:
   app:
     build:
@@ -23,6 +25,12 @@ services:
       - baryeu-data:/data
     expose:
       - "3000"
+    networks:
+      - dokploy-network
+
+networks:
+  dokploy-network:
+    external: true
 
 volumes:
   baryeu-data:
