@@ -42,6 +42,29 @@ certbot à configurer.
 appliquées automatiquement au démarrage du conteneur. Le volume `baryeu-data`
 conserve la base entre les déploiements.
 
+## Comptes (seed)
+
+L'app n'a **pas d'inscription publique** : les 2 comptes sont créés par un script.
+
+Les migrations sont déjà appliquées automatiquement au démarrage du conteneur
+(`scripts/migrate.js`, sur `DATABASE_PATH`). Il reste donc seulement à créer les comptes :
+
+1. Définir dans *Environment* (Dokploy, **non versionné**) :
+   `SEED_USER1_EMAIL`, `SEED_USER1_NAME`, `SEED_USER1_PASSWORD`,
+   `SEED_USER2_EMAIL`, `SEED_USER2_NAME`, `SEED_USER2_PASSWORD` (mot de passe ≥ 8 caractères).
+2. Lancer le seed dans le conteneur (terminal Dokploy du service `app`) :
+   `npm run db:seed` — **idempotent** (relançable pour réinitialiser un mot de passe).
+   Le script cible `DATABASE_PATH` (= `/data/data.sqlite`, le volume persistant).
+3. Vérifier que `ORIGIN=https://yeu-bar-fishing.clementpep.cloud` est défini
+   (requis pour les actions POST/cookies en production).
+
+Le changement de mot de passe est ensuite possible depuis l'écran **Profil**
+(il invalide toutes les sessions de l'utilisateur : reconnexion requise).
+
+> **En local** : migrer puis seeder une base jetable, p. ex.
+> `DATABASE_PATH=dev.sqlite node scripts/migrate.js` puis
+> `DATABASE_PATH=dev.sqlite SEED_USER1_EMAIL=… … npm run db:seed`.
+
 ## Vérification locale (optionnelle, avant de pousser)
 ```bash
 docker compose build           # build l'image
