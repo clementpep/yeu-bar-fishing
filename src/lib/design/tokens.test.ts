@@ -30,5 +30,6 @@ describe('design tokens', () => {
     expect(cssVar('text.2xl')).toBe('var(--text-2xl)');
     expect(cssVar('radius.md')).toBe('var(--radius-md)');
     expect(cssVar('motion.easeOut')).toBe('var(--motion-ease-out)');
+    expect(cssVar('shadow.md')).toBe('var(--shadow-md)');
   });
 });

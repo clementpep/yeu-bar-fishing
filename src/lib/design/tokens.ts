@@ -39,6 +39,7 @@ export const tokens = {
     '2': '0 4px 16px rgba(0, 0, 0, 0.4)',
     '3': '0 12px 32px rgba(0, 0, 0, 0.5)'
   },
+  // Alias visuel d'elevation.2 (rétro-compat des consommateurs de shadow.md).
   shadow: { md: '0 4px 16px rgba(0, 0, 0, 0.4)' },
   motion: {
     durFast: '120ms',
@@ -57,6 +58,8 @@ export const tokens = {
  *   cssVar('color.brass') => 'var(--color-brass)'
  *   cssVar('space.4') => 'var(--space-4)'
  *   cssVar('color.depthsLight') => 'var(--color-depths-light)'
+ *   cssVar('text.2xl')      => 'var(--text-2xl)'
+ *   cssVar('motion.easeOut') => 'var(--motion-ease-out)'
  */
 export function cssVar(path: string): string {
   const kebabPath = path
