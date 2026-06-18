@@ -83,7 +83,6 @@
 		flex-direction: column;
 		align-items: center;
 		gap: var(--space-6);
-		margin: var(--space-4) 0 var(--space-6);
 	}
 	.moment-why {
 		text-align: center;
