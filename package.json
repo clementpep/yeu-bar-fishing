@@ -9,6 +9,8 @@
 		"preview": "vite preview",
 		"test": "vitest",
 		"gen:icons": "node scripts/gen-icons.mjs",
+		"db:generate": "drizzle-kit generate",
+		"db:migrate": "drizzle-kit migrate",
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch"
@@ -20,8 +22,10 @@
 		"@sveltejs/vite-plugin-svelte": "^7.1.2",
 		"@testing-library/jest-dom": "^6.9.1",
 		"@testing-library/svelte": "^5.3.1",
+		"@types/better-sqlite3": "^7.6.13",
 		"@vite-pwa/sveltekit": "^1.1.0",
 		"@vitest/coverage-v8": "^4.1.9",
+		"drizzle-kit": "^0.31.10",
 		"jsdom": "^29.1.1",
 		"sharp": "^0.35.1",
 		"svelte": "^5.56.1",
@@ -33,6 +37,8 @@
 	},
 	"dependencies": {
 		"@fontsource-variable/fraunces": "^5.2.9",
-		"@fontsource-variable/inter": "^5.2.8"
+		"@fontsource-variable/inter": "^5.2.8",
+		"better-sqlite3": "^12.11.1",
+		"drizzle-orm": "^0.45.2"
 	}
 }
