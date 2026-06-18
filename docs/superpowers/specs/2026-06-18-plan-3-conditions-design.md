@@ -22,8 +22,8 @@ Doter l'app du **moteur de conditions** qui alimente l'écran d'accueil « Le mo
 | Sujet | Décision |
 |---|---|
 | Marées | **Calcul harmonique local** (offline, gratuit, sans clé ni quota). |
-| Constantes harmoniques | **FES2014** (atlas mondial CNES/LEGOS, licence ouverte) extraites au point Port-Joinville, **committées en JSON**. SHOM **interdit la rediffusion** de ses constantes (OHI) → exclu pour un repo public. |
-| Acquisition constantes | **Spike outillé (Task 1)** + **validation vs prédictions SHOM gratuites** (horaires PM/BM ~±10 min, coef ±5). **Repli** si extraction FES impraticable : fit harmonique least-squares sur une série bootstrap. Si aucun ne valide → on rouvre la décision (API). |
+| Constantes harmoniques | **Dérivées par analyse harmonique** d'une série d'observations de niveau marin de Port-Joinville issue de **REFMAR/SONEL** (réseau marégraphique français), **en Licence Ouverte 2.0** (donc **rediffusable** → constituantes committées en JSON, repo public OK). SHOM **interdit la rediffusion** de ses *constantes* (OHI) → exclu ; **FES2014** (AVISO) écarté faute de compte + lourdeur FTP/NetCDF. |
+| Acquisition constantes | **Spike outillé (Task 1)** : télécharger une série de niveaux Port-Joinville (REFMAR, Licence Ouverte, ≥ ~1 an si possible), **fit harmonique least-squares** (ex. `utide`/`pytides`) → JSON committé, puis **validation vs prédictions/coef SHOM gratuits** (horaires PM/BM ~±10 min, coef ±5). **Repli** si la série REFMAR est inexploitable : extraction FES2014 (nécessite alors un compte AVISO). Si aucun ne valide → on rouvre la décision (API). |
 | Météo / vent / vagues | **Open-Meteo** Forecast + Marine API — gratuit, **sans clé**. |
 | Lune & soleil | Bibliothèque **suncalc** (MIT), calcul local offline. |
 | Cron VPS | **Aucun en v1** : marées + lune calculées localement à tout instant ; seule la météo (réseau) est mise en cache pour l'offline. *(Écart assumé vs spec produit §4.2.)* |
@@ -68,10 +68,13 @@ constituants.json ─► tide ────┘
 ## 4. Moteur de marée (cœur)
 
 ### 4.1 Acquisition des constituantes (Task 1 = spike)
-- Extraire les constituantes harmoniques (amplitude `H`, phase `g`) de Port-Joinville depuis **FES2014** pour un jeu de constituantes dominantes (au minimum **M2, S2, N2, K2, K1, O1, P1, Q1, M4, MS4**, étendu si dispo) → fichier committé `src/lib/server/conditions/data/port-joinville.constituents.json` (+ métadonnées : source, point lat/lng, datum, date d'extraction).
-- **Critère de succès / validation** : prédire les horaires PM/BM sur 5–10 dates et comparer aux **prédictions SHOM gratuites** (portail public) → écart cible **~±10 min** ; comparer le **coefficient** calculé aux coef **publiés par SHOM** → écart cible **±5**.
-- **Repli** si l'extraction FES est impraticable : reconstruire les constituantes par **fit harmonique least-squares** sur une série bootstrap de hauteurs (≥ 29 jours). Même critère de validation.
-- **Garde-fou** : si ni FES ni le fit ne passent la validation, **arrêt** et remontée à l'utilisateur pour rouvrir la décision (API tier gratuit). Le reste du plan reste valable (interface inchangée).
+- **Voie principale — fit harmonique sur données REFMAR (Licence Ouverte 2.0)** :
+  1. Télécharger une série d'observations de niveau marin de Port-Joinville depuis **REFMAR / data.shom.fr / SONEL** (≥ ~1 an si possible ; ≥ 29 jours minimum pour les constituantes principales).
+  2. **Analyse harmonique least-squares** (outil de prep one-time : `utide`/`pytides`/`uptide`) pour estimer amplitude `H` et phase `g` d'un jeu de constituantes dominantes (au minimum **M2, S2, N2, K2, K1, O1, P1, Q1, M4, MS4**, étendu si la série le permet). L'analyse least-squares sépare naturellement les constituantes astronomiques du résidu météo (surcote).
+  3. Écrire le fichier committé `src/lib/server/conditions/data/port-joinville.constituents.json` (+ métadonnées : source REFMAR, station, période, datum, date de calcul, licence).
+- **Critère de succès / validation** : prédire les horaires PM/BM sur 5–10 dates et comparer aux **prédictions SHOM gratuites** (portail public, `maree.info`) → écart cible **~±10 min** ; comparer le **coefficient** calculé aux coef **publiés par SHOM** → écart cible **±5**.
+- **Repli** si la série REFMAR est inexploitable (lacunes, station indisponible) : extraction **FES2014** au point (nécessite un compte **AVISO+** + FTP/NetCDF + PyFES). Même critère de validation.
+- **Garde-fou** : si ni le fit REFMAR ni FES ne passent la validation, **arrêt** et remontée à l'utilisateur pour rouvrir la décision (API tier gratuit). Le reste du plan reste valable (interface du prédicteur inchangée).
 
 ### 4.2 Prédicteur
 - Bibliothèque **`@neaps/tide-predictor`** (MIT) consommant le JSON de constituantes (corrections nodales + arguments astronomiques inclus), ou implémentation minimale vettée si la lib pose problème. Tout est validé par les tests TDD ci-dessous.
@@ -189,11 +192,11 @@ Câblage de l'écran existant (livré au design system) avec `DayConditions` :
 
 ## 12. Risques & points ouverts
 
-1. **Acquisition FES2014** (principal) : le dataset peut nécessiter une inscription AVISO + téléchargement volumineux. → spike Task 1 time-boxé + repli (fit harmonique) + garde-fou (arrêt si validation échoue).
-2. **Exactitude côtière** : FES est un modèle océanique ; Port-Joinville est un port → écart possible vs marégraphe. → validation SHOM, ajustement, sinon repli.
-3. **Coefficient français** : formule/normalisation à calibrer contre SHOM.
-4. **Pondérations du score** : valeurs par défaut indicatives, à calibrer sur des bases reconnues de pêche du bar — marquées comme telles.
-5. **Licence FES2014** : vérifier que la rediffusion des constituantes dérivées au point est permise (usage non commercial) ; documenter la source dans le JSON.
+1. **Acquisition des constituantes** (principal) : disponibilité et qualité de la série REFMAR Port-Joinville (lacunes, longueur). → spike Task 1 time-boxé + validation SHOM + repli FES2014 (compte AVISO) + garde-fou (arrêt si validation échoue).
+2. **Exactitude** : un fit sur série marégraphique portuaire est *a priori* précis localement ; reste à confirmer la validation SHOM (±10 min / ±5 coef), sinon ajuster (plus de constituantes / série plus longue) ou repli.
+3. **Coefficient français** : formule/normalisation à calibrer contre les coef SHOM publiés.
+4. **Pondérations du score** : valeurs par défaut « pêche du bar » documentées, à calibrer ultérieurement — marquées comme telles.
+5. **Licence des données** : REFMAR/SONEL = **Licence Ouverte 2.0** (rediffusion OK) ; documenter source/station/période/licence dans le JSON. (Ne PAS committer de constantes SHOM, non rediffusables.)
 6. **Disponibilité Open-Meteo Marine** : peut manquer ponctuellement → dégradation gracieuse (`wave* = null`).
 
 ## 13. Hors périmètre (rappel)
