@@ -63,34 +63,34 @@
 		transition: color var(--motion-dur-fast) var(--motion-ease-out);
 	}
 	.tab-icon {
-		width: 24px;
-		height: 24px;
-		display: block;
+		display: grid;
+		place-items: center;
+		height: 30px;
+		padding: 0 var(--space-4);
+		border-radius: var(--radius-full);
+		background: transparent;
+		transition:
+			background var(--motion-dur-base) var(--motion-ease-out),
+			transform var(--motion-dur-base) var(--motion-ease-spring);
 	}
 	.tab-icon :global(svg) {
-		width: 100%;
-		height: 100%;
+		width: 24px;
+		height: 24px;
 		display: block;
 	}
 	.tab-label {
 		font-size: var(--text-xs);
 		letter-spacing: var(--tracking-wide);
+		transition: color var(--motion-dur-fast) var(--motion-ease-out);
 	}
 	.tab.active {
 		color: var(--accent);
 	}
+	.tab.active .tab-icon {
+		background: var(--accent-tint);
+		transform: translateY(-2px);
+	}
 	.tab.active .tab-label {
 		font-weight: 600;
-	}
-	.tab.active::before {
-		content: '';
-		position: absolute;
-		top: 0;
-		left: 50%;
-		transform: translateX(-50%);
-		width: 22px;
-		height: 2px;
-		background: var(--accent);
-		border-radius: var(--radius-full);
 	}
 </style>
