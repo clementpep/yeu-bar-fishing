@@ -1,0 +1,82 @@
+/* Import variable fonts from fontsource */
+@import '@fontsource-variable/fraunces';
+@import '@fontsource-variable/inter';
+
+/* Design tokens as CSS custom properties */
+:root {
+  --color-trench: #051120;
+  --color-abyss: #0A1722;
+  --color-marine: #0E2A3B;
+  --color-slate: #1B3A4B;
+  --color-depths-light: #2A4A5B;
+  --color-brass: #C9A24B;
+  --color-sand: #E7D8B8;
+  --color-text: #F2F6F8;
+  --color-text-muted: #9DB2BE;
+  --color-danger: #D94C47;
+  --color-success: #4FA083;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  --font-display: "Fraunces Variable", Georgia, serif;
+  --font-body: "Inter Variable", system-ui, sans-serif;
+}
+
+/* Global reset */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--color-abyss);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  min-height: 100dvh;
+}
+
+/* Base typography */
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+}
+
+/* Tabular figures for numeric data */
+[data-tabular],
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Focus-visible outline */
+:focus-visible {
+  outline: 2px solid var(--color-brass);
+  outline-offset: 2px;
+}
+
+/* Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
