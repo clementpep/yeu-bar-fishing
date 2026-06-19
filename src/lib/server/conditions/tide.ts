@@ -11,18 +11,30 @@ export interface ConstituentsFile {
 	constituents: Constituent[];
 }
 
-// Vitesses angulaires standard (degrés/heure) des constituantes courantes.
+// Vitesses angulaires standard (degrés/heure) des constituantes.
+// Doit matcher SPEEDS de scripts/fit-tide-constituents.mjs (mêmes noms).
 const SPEEDS: Record<string, number> = {
-	M2: 28.984104,
+	SA: 0.0410686,
+	SSA: 0.0821373,
+	MM: 0.5443747,
+	MF: 1.0980331,
+	Q1: 13.3986609,
+	O1: 13.9430356,
+	P1: 14.9589314,
+	K1: 15.0410686,
+	'2N2': 27.8953548,
+	MU2: 27.9682084,
+	N2: 28.4397295,
+	NU2: 28.5125831,
+	M2: 28.9841042,
+	L2: 29.5284789,
+	T2: 29.9589333,
 	S2: 30.0,
-	N2: 28.43973,
-	K2: 30.082137,
-	K1: 15.041069,
-	O1: 13.943035,
-	P1: 14.958931,
-	Q1: 13.398661,
-	M4: 57.968208,
-	MS4: 58.984104
+	K2: 30.0821373,
+	MN4: 57.4238337,
+	M4: 57.9682084,
+	MS4: 58.9841042,
+	M6: 86.9523127
 };
 
 // Référence temporelle pour la convention de phase (UTC).
@@ -74,7 +86,7 @@ export function createTideEngine(file: ConstituentsFile) {
 		const lows = ex.filter((e) => e.type === 'low').map((e) => e.height);
 		if (!highs.length || !lows.length) return 70;
 		const range = Math.max(...highs) - Math.min(...lows);
-		return normalizeCoefficient(range, file);
+		return normalizeCoefficient(range);
 	}
 
 	function dayTides(day: Date): DayTides {
@@ -112,9 +124,8 @@ function makePredictor(file: ConstituentsFile): (t: Date) => number {
 	};
 }
 
-// Normalisation du coefficient français (VE≈95–120, ME≈20–45), calibrée en Task 4 vs SHOM.
-function normalizeCoefficient(range: number, file: ConstituentsFile): number {
-	const m2 = file.constituents.find((x) => x.name === 'M2')?.amplitude ?? 1.8;
-	const c = 20 + (range / (2 * m2)) * 50;
-	return Math.max(20, Math.min(120, Math.round(c)));
+// Coefficient français : map linéaire marnage→coef calibrée vs coef SHOM Port-Joinville
+// (régression sur 19-22/06/2026 : coef ≈ 19.9·marnage + 1), bornée 20–120.
+function normalizeCoefficient(range: number): number {
+	return Math.max(20, Math.min(120, Math.round(19.9 * range + 1)));
 }
