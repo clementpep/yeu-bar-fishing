@@ -12,6 +12,7 @@ import { sunMoonFor } from './moon';
 import { createTideEngine, type ConstituentsFile } from './tide';
 import { getWeather } from './weather';
 import { computeScore } from './score';
+import { parisMidnight, parisMonth } from '$lib/conditions/tz';
 import constituentsData from './data/port-joinville.constituents.json';
 
 type DB = ReturnType<typeof createDb>;
@@ -50,9 +51,10 @@ export function buildTip(trend: TideTrend, sunMoon: SunMoon, score: FishingScore
 	return 'Conditions difficiles : sortie courte conseillée sur les meilleurs créneaux (étales, aube/crépuscule).';
 }
 
-export async function getDayConditions(db: DB, day: Date = new Date()): Promise<DayConditions> {
-	const tides = engine.dayTides(day);
-	const sunMoon = sunMoonFor(day);
+export async function getDayConditions(db: DB, now: Date = new Date()): Promise<DayConditions> {
+	const dayStart = parisMidnight(now);
+	const tides = engine.dayTides(dayStart);
+	const sunMoon = sunMoonFor(now);
 
 	let weather = null;
 	let weatherStale = false;
@@ -64,7 +66,6 @@ export async function getDayConditions(db: DB, day: Date = new Date()): Promise<
 		weather = null;
 	}
 
-	const now = day;
 	const trend = engine.tideStateAt(now, tides.extremes);
 	const minutesToExtreme = tides.extremes.length
 		? Math.min(...tides.extremes.map((e) => Math.abs(e.time.getTime() - now.getTime()) / 60_000))
@@ -76,12 +77,12 @@ export async function getDayConditions(db: DB, day: Date = new Date()): Promise<
 		coefficient: tides.coefficient,
 		sunMoon,
 		weather,
-		month: now.getMonth()
+		month: parisMonth(now)
 	});
 
 	return {
 		spot: { id: ILE_DYEU.id, name: ILE_DYEU.name },
-		day,
+		day: dayStart,
 		tides,
 		sunMoon,
 		weather,

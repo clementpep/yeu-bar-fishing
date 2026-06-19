@@ -3,7 +3,10 @@
 	import ScoreGauge from '$lib/components/ui/ScoreGauge.svelte';
 	import TideCurve from '$lib/components/ui/TideCurve.svelte';
 	import StatTile from '$lib/components/ui/StatTile.svelte';
-	import { mockMoment as m } from '$lib/data/mock-moment';
+	import type { PageData } from './$types';
+
+	let { data }: { data: PageData } = $props();
+	const m = $derived(data.moment);
 </script>
 
 <header class="moment-header">

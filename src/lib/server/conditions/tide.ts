@@ -77,11 +77,10 @@ export function createTideEngine(file: ConstituentsFile) {
 		return after >= before ? 'rising' : 'falling';
 	}
 
-	function coefficientForDay(day: Date): number {
-		const start = new Date(day);
-		start.setHours(0, 0, 0, 0);
-		const end = new Date(start.getTime() + 24 * 3600_000);
-		const ex = findExtremes(start, end);
+	// `dayStart` est l'instant de début de journée (le fuseau est géré par l'appelant).
+	function coefficientForDay(dayStart: Date): number {
+		const end = new Date(dayStart.getTime() + 24 * 3600_000);
+		const ex = findExtremes(dayStart, end);
 		const highs = ex.filter((e) => e.type === 'high').map((e) => e.height);
 		const lows = ex.filter((e) => e.type === 'low').map((e) => e.height);
 		if (!highs.length || !lows.length) return 70;
@@ -89,14 +88,12 @@ export function createTideEngine(file: ConstituentsFile) {
 		return normalizeCoefficient(range);
 	}
 
-	function dayTides(day: Date): DayTides {
-		const start = new Date(day);
-		start.setHours(0, 0, 0, 0);
-		const end = new Date(start.getTime() + 24 * 3600_000);
+	function dayTides(dayStart: Date): DayTides {
+		const end = new Date(dayStart.getTime() + 24 * 3600_000);
 		return {
-			curve: predictHeights(start, end, 10),
-			extremes: findExtremes(start, end),
-			coefficient: coefficientForDay(day)
+			curve: predictHeights(dayStart, end, 10),
+			extremes: findExtremes(dayStart, end),
+			coefficient: coefficientForDay(dayStart)
 		};
 	}
 
