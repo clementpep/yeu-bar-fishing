@@ -12,6 +12,8 @@ exigé, iOS **et** Android, utilisable **hors-ligne**.
 - **Plan 2 — Auth & Profil : ✅ mergé** (PR #3) — argon2, sessions cookie httpOnly, route-group `(app)` protégé, login/profil.
 - **Plan 2b — Inscription publique : ✅ mergé** (PR #4) — `/register` ouvert ; **tout inscrit est ami par défaut** (pas de table friends, impacte Plan 6).
 - **Plan 3 — Moteur Conditions : ✅ livré** — marées par **fit harmonique** (proxy L'Herbaudière/IOC calibré Port-Joinville vs SHOM : étales ±~10 min, hauteurs ±0,1 m), **Open-Meteo** (sans clé) + cache offline, **suncalc** (lune/soleil), **score de pêche explicable**, écran « Le moment » câblé. Pas de cron ; spot en constante. Régénérer les constituantes : `node scripts/fit-tide-constituents.mjs` (données IOC dans `scripts/.tidedata/`, non versionnées).
+- **Branding : ✅ livré** — logo « PÊCHE AU BAR » (icônes PWA/favicon/splash via `gen-icons.mjs` depuis `static/branding/logo.png`), manifest renommé, logo sur login/register. **Fix PWA** : `navigateFallback: null` (le SW ne sert plus un shell périmé → corrige les « POST / no form actions »).
+- **Plan 4 — Carnet : ✅ livré** — saisie de prise (taille, technique, leurre/appât, gardé/relâché), **poids estimé** (W≈0.0085·L^3.05), **capture auto des conditions** (snapshot via `getDayConditions`), maille **42 cm** signalée non bloquante, historique + records personnels. Table `catches`. Sans photo (v1).
 - **Plan 1 — Fondations : ✅ terminé, revu, mergé sur `main`** (PR #1).
   Livré : scaffold SvelteKit+TS+Vitest, **design system** (tokens nautiques, Fraunces/Inter
   auto-hébergées), primitives UI (Button/Card/TabBar), **shell + navigation 5 onglets**
@@ -27,12 +29,11 @@ exigé, iOS **et** Android, utilisable **hors-ligne**.
   Penser à définir `ORIGIN=https://yeu-bar-fishing.clementpep.cloud` dans *Environment* (Dokploy).
 
 ## 3. Prochaine étape de dev
-**Plan 4 — Carnet** : saisie d'une prise (taille, poids, technique, leurre/appât, gardé/relâché),
-**capture automatique des conditions** au moment de la prise (réutiliser `getDayConditions`),
-validation maille **42 cm** (signalée, non bloquante), historique + records. **Sans photo en v1**
-(décision de cadrage 2026-06-19). Puis Plan 5 (Savoir, contenu starter + illustrations SVG),
-Plan 6 (Duel/badges — amis = tous les inscrits), Plan 7 (offline & finitions).
-Chantier branding en attente : nom **« PÊCHE AU BAR »** + logo (déposer dans `static/branding/`).
+**Plan 5 — Savoir & Quiz** : bibliothèque éducative **starter concise** (fiches techniques leurre/
+surfcasting/appâts/traîne, montages essentiels en **schémas SVG maison**, réglementation maille 42 cm),
+**quiz** intégré, **illustrations** (SVG + images licence ouverte ; photos de leurres déposables par
+Clément). Puis Plan 6 (Duel/badges — **amis = tous les inscrits**, je définis badges/défis),
+Plan 7 (offline avancé & finitions).
 
 Roadmap complète (chaque plan = un cycle, livre du logiciel fonctionnel) :
 Plan 2 Auth · Plan 3 Moteur Conditions (marées API gratuite + cache cron, météo Open-Meteo
