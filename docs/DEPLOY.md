@@ -44,7 +44,7 @@ conserve la base entre les déploiements.
 
 ## Comptes (seed)
 
-L'app n'a **pas d'inscription publique** : les 2 comptes sont créés par un script.
+L'inscription est **publique et ouverte** : n'importe qui peut créer un compte depuis l'écran `/register`. Le seed ci-dessous reste **optionnel** — pratique pour amorcer un premier compte ou réinitialiser un mot de passe.
 
 Les migrations sont déjà appliquées automatiquement au démarrage du conteneur
 (`scripts/migrate.js`, sur `DATABASE_PATH`). Il reste donc seulement à créer les comptes :

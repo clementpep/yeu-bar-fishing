@@ -8,30 +8,31 @@
 	let { form }: { form: ActionData } = $props();
 </script>
 
-<main class="login">
-	<header class="login-head">
-		<p class="login-kicker">Bar d'Yeu</p>
-		<h1>Connexion</h1>
+<main class="auth">
+	<header class="auth-head">
+		<p class="auth-kicker">Bar d'Yeu</p>
+		<h1>Créer un compte</h1>
 	</header>
 
 	<Card>
-		<form method="POST" use:enhance class="login-form">
+		<form method="POST" use:enhance class="auth-form">
+			<TextField label="Nom" name="name" type="text" autocomplete="name" required value={form?.name ?? ''} />
 			<TextField label="Adresse e-mail" name="email" type="email" autocomplete="username" required value={form?.email ?? ''} />
-			<TextField label="Mot de passe" name="password" type="password" autocomplete="current-password" required />
+			<TextField label="Mot de passe" name="password" type="password" autocomplete="new-password" required />
 
 			{#if form?.error}
-				<p class="login-error" role="alert" aria-live="polite">{form.error}</p>
+				<p class="auth-error" role="alert" aria-live="polite">{form.error}</p>
 			{/if}
 
-			<Button type="submit">Se connecter</Button>
+			<Button type="submit">S'inscrire</Button>
 		</form>
 	</Card>
 
-	<p class="login-switch">Pas encore de compte ? <a href="/register">Créer un compte</a></p>
+	<p class="auth-switch">Déjà un compte ? <a href="/login">Se connecter</a></p>
 </main>
 
 <style>
-	.login {
+	.auth {
 		min-height: 100dvh;
 		display: flex;
 		flex-direction: column;
@@ -44,33 +45,33 @@
 		margin: 0 auto;
 	}
 	@supports (min-height: 100svh) {
-		.login { min-height: 100svh; }
+		.auth { min-height: 100svh; }
 	}
-	.login-kicker {
+	.auth-kicker {
 		font-size: var(--text-sm);
 		letter-spacing: var(--tracking-wide);
 		text-transform: uppercase;
 		color: var(--text-faint);
 		margin-bottom: var(--space-1);
 	}
-	.login-head h1 {
+	.auth-head h1 {
 		font-size: var(--text-3xl);
 	}
-	.login-form {
+	.auth-form {
 		display: flex;
 		flex-direction: column;
 		gap: var(--space-4);
 	}
-	.login-error {
+	.auth-error {
 		font-size: var(--text-sm);
 		color: var(--color-danger);
 	}
-	.login-switch {
+	.auth-switch {
 		text-align: center;
 		font-size: var(--text-sm);
 		color: var(--text-secondary);
 	}
-	.login-switch a {
+	.auth-switch a {
 		color: var(--accent);
 		font-weight: 500;
 	}

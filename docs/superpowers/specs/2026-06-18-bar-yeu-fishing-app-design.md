@@ -40,6 +40,8 @@ L'app est utilisée par **deux pêcheurs** (le père de Clément et son ami). El
 | Stack | **SvelteKit + SQLite (Drizzle ORM)** — validé. |
 | Langue | **Français**. |
 | Lieu par défaut | **Île d'Yeu / Port-Joinville**, avec possibilité d'ajouter d'autres spots (v1 minimale, extensible). |
+| Inscription | **Publique et ouverte** (révision 2026-06-18, *amende* la décision initiale « 2 comptes, pas d'inscription publique ») : n'importe qui peut créer un compte (nom + e-mail + mot de passe argon2). Risque de spam assumé pour une app perso. Le seed reste disponible (bootstrap/reset). |
+| Amis / social | **Tout utilisateur inscrit est « ami » par défaut** : pas de table `friends`, pas de mécanisme d'ajout d'amis. Le duel/classement (Plan 6) porte sur l'ensemble des inscrits. |
 
 ## 4. Stack technique & architecture
 
@@ -48,7 +50,7 @@ L'app est utilisée par **deux pêcheurs** (le père de Clément et son ami). El
 **SvelteKit + SQLite** (validé). Justification : bundles ultra-légers (perf maximale sur Safari iOS), animations premium natives (transitions / motion), PWA & offline simples, un seul livrable déployable sur le VPS.
 
 - **ORM** : Drizzle (typé, léger, migrations simples).
-- **Auth** : email + mot de passe, hash **argon2**, sessions cookie **httpOnly** (Lucia ou implémentation maison minimale). Robuste, 2 comptes, extensible.
+- **Auth** : email + mot de passe, hash **argon2**, sessions cookie **httpOnly** (implémentation maison minimale, livrée au Plan 2). **Inscription publique ouverte** (révision 2026-06-18) : écrans login **et** register ; tout inscrit est ami par défaut. Extensible.
 - **PWA / offline** : service worker (Workbox ou natif Vite PWA) ; cache du contenu éducatif + dernières conditions synchronisées ; carnet en *local-first* puis synchronisation.
 - **Déploiement** : `@sveltejs/adapter-node` + PM2 + nginx (reverse proxy + TLS). Guide de déploiement fourni à l'implémentation.
 
@@ -158,7 +160,7 @@ Records & classement = **vues / requêtes calculées** sur `catch` (pas de déno
 ## 8. Périmètre
 
 ### v1 (cible de ce cycle)
-- Auth 2 comptes (argon2, sessions cookie).
+- Auth **inscription publique ouverte** (argon2, sessions cookie) — login + register ; tout inscrit est ami par défaut (révision 2026-06-18).
 - Accueil « Le moment » : conditions live île d'Yeu + score de pêche explicable + fenêtres conseillées.
 - Savoir : bibliothèque éducative interactive + quiz.
 - Carnet : saisie prise + capture auto des conditions + records & stats.
