@@ -25,3 +25,6 @@ vite.config.ts.timestamp-*
 # SQLite
 *.sqlite
 *.sqlite-*
+
+# Données brutes téléchargées pour le fit de marée (non versionnées)
+scripts/.tidedata/
