@@ -7,6 +7,15 @@ export default defineConfig({
 		sveltekit(),
 		SvelteKitPWA({
 			registerType: 'autoUpdate',
+			workbox: {
+				// App SSR + auth + form actions : NE PAS servir un shell caché pour les
+				// navigations (sinon un client PWA installé sert une page périmée qui POST
+				// vers une route sans action → « No form actions exist for this page »).
+				// Les navigations passent toujours par le serveur (auth/SSR/actions corrects).
+				// L'offline avancé (navigation hors-ligne) sera traité au Plan 7.
+				navigateFallback: null,
+				cleanupOutdatedCaches: true
+			},
 			manifest: {
 				name: "Bar d'Yeu",
 				short_name: "Bar d'Yeu",
