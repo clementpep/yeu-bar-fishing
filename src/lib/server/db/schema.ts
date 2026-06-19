@@ -22,3 +22,11 @@ export const sessions = sqliteTable('sessions', {
 });
 
 export type Session = typeof sessions.$inferSelect;
+
+export const conditionsCache = sqliteTable('conditions_cache', {
+	id: text('id').primaryKey(), // = spot id
+	weatherJson: text('weather_json').notNull(),
+	fetchedAt: integer('fetched_at', { mode: 'timestamp' }).notNull()
+});
+
+export type ConditionsCache = typeof conditionsCache.$inferSelect;
