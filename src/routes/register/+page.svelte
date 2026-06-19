@@ -10,7 +10,7 @@
 
 <main class="auth">
 	<header class="auth-head">
-		<p class="auth-kicker">Bar d'Yeu</p>
+		<img class="auth-logo" src="/branding/logo-web.png" alt="Pêche au Bar — Île d'Yeu" width="120" height="120" />
 		<h1>Créer un compte</h1>
 	</header>
 
@@ -47,12 +47,18 @@
 	@supports (min-height: 100svh) {
 		.auth { min-height: 100svh; }
 	}
-	.auth-kicker {
-		font-size: var(--text-sm);
-		letter-spacing: var(--tracking-wide);
-		text-transform: uppercase;
-		color: var(--text-faint);
-		margin-bottom: var(--space-1);
+	.auth-head {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: var(--space-4);
+		text-align: center;
+	}
+	.auth-logo {
+		width: 120px;
+		height: 120px;
+		border-radius: var(--radius-lg);
+		box-shadow: var(--elevation-1);
 	}
 	.auth-head h1 {
 		font-size: var(--text-3xl);

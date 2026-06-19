@@ -17,14 +17,14 @@ export default defineConfig({
 				cleanupOutdatedCaches: true
 			},
 			manifest: {
-				name: "Bar d'Yeu",
-				short_name: "Bar d'Yeu",
-				description: 'Assistant de pêche au bar — île d\'Yeu',
+				name: 'PÊCHE AU BAR',
+				short_name: 'Pêche au Bar',
+				description: "Assistant de pêche au bar — île d'Yeu, Vendée",
 				lang: 'fr',
 				start_url: '/',
 				display: 'standalone',
-				background_color: '#0A1722',
-				theme_color: '#0A1722',
+				background_color: '#082739',
+				theme_color: '#082739',
 				icons: [
 					{ src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
 					{ src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
