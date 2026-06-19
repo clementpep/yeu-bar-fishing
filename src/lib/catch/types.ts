@@ -1,3 +1,6 @@
+/** Maille minimale du bar (façade Atlantique/Manche), en cm. */
+export const MAILLE_BAR_CM = 42;
+
 export const TECHNIQUES = [
 	'Leurre',
 	'Surfcasting',

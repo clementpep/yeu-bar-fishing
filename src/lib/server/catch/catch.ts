@@ -2,11 +2,9 @@ import { randomUUID } from 'node:crypto';
 import { desc, eq } from 'drizzle-orm';
 import type { createDb } from '$lib/server/db';
 import { catches } from '$lib/server/db/schema';
-import type { Catch, CatchConditions, Technique } from '$lib/catch/types';
+import { MAILLE_BAR_CM, type Catch, type CatchConditions, type Technique } from '$lib/catch/types';
 
 type DB = ReturnType<typeof createDb>;
-
-export const MAILLE_BAR_CM = 42;
 
 // Relation taille-poids du bar (Dicentrarchus labrax) : W(g) ≈ 0.0085·L(cm)^3.05. Estimation.
 export function estimateWeightG(lengthCm: number): number {
