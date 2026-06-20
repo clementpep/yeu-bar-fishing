@@ -76,6 +76,16 @@
 	{/each}
 </section>
 
+<a class="quiz-cta" href="/savoir/quiz">
+	<span class="quiz-cta-text">
+		<span class="quiz-cta-title">Tester mes connaissances</span>
+		<span class="quiz-cta-sub">7 questions pour vérifier que tu maîtrises l’essentiel.</span>
+	</span>
+	<svg class="quiz-cta-arrow" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+		<path d="M5 12h14M13 6l6 6-6 6" />
+	</svg>
+</a>
+
 <style>
 	.page-header {
 		margin-bottom: var(--space-2);
@@ -172,5 +182,48 @@
 		border-radius: 50%;
 		background: var(--accent);
 		opacity: 0.8;
+	}
+
+	/* Appel à l'action vers le quiz. */
+	.quiz-cta {
+		display: flex;
+		align-items: center;
+		gap: var(--space-4);
+		margin-top: var(--space-5, 20px);
+		padding: var(--space-4) var(--space-5, 20px);
+		border-radius: var(--radius-lg);
+		text-decoration: none;
+		color: var(--accent);
+		background: rgba(201, 162, 75, 0.1);
+		box-shadow: inset 0 0 0 1px rgba(201, 162, 75, 0.3);
+		transition:
+			background var(--motion-dur-fast) var(--motion-ease-out),
+			transform var(--motion-dur-fast) var(--motion-ease-out);
+	}
+	@media (hover: hover) {
+		.quiz-cta:hover {
+			background: rgba(201, 162, 75, 0.16);
+		}
+	}
+	.quiz-cta:active {
+		transform: scale(0.99);
+	}
+	.quiz-cta-text {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		flex: 1;
+	}
+	.quiz-cta-title {
+		font-weight: 600;
+		color: var(--text-primary);
+	}
+	.quiz-cta-sub {
+		font-size: var(--text-sm);
+		color: var(--text-secondary);
+		line-height: var(--leading-snug);
+	}
+	.quiz-cta-arrow {
+		flex: none;
 	}
 </style>
