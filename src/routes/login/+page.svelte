@@ -10,8 +10,13 @@
 
 <main class="login">
 	<header class="login-head">
-		<img class="login-logo" src="/branding/logo-web.png" alt="Pêche au Bar — Île d'Yeu" width="120" height="120" />
-		<h1>Connexion</h1>
+		<div class="brand-mark">
+			<img class="login-logo" src="/branding/logo-web.png" alt="Pêche au Bar — Île d'Yeu" width="96" height="96" />
+		</div>
+		<div class="login-titles">
+			<h1>Connexion</h1>
+			<p class="login-tagline">Ton assistant de pêche au bar, à l’île d’Yeu.</p>
+		</div>
 	</header>
 
 	<Card>
@@ -50,17 +55,49 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		gap: var(--space-4);
+		gap: var(--space-5, 20px);
 		text-align: center;
 	}
+	/* Halo « lever de soleil » laiton derrière le logo (écho à l'icône Le moment). */
+	.brand-mark {
+		position: relative;
+		display: grid;
+		place-items: center;
+	}
+	.brand-mark::before {
+		content: '';
+		position: absolute;
+		width: 220px;
+		height: 220px;
+		border-radius: 50%;
+		background: radial-gradient(circle, rgba(201, 162, 75, 0.2), transparent 60%);
+		pointer-events: none;
+		z-index: 0;
+	}
 	.login-logo {
-		width: 120px;
-		height: 120px;
-		border-radius: var(--radius-lg);
-		box-shadow: var(--elevation-1);
+		position: relative;
+		z-index: 1;
+		width: 96px;
+		height: 96px;
+		border-radius: var(--radius-xl);
+		box-shadow:
+			var(--elevation-2),
+			0 0 0 1px var(--border-subtle);
+	}
+	.login-titles {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-2);
 	}
 	.login-head h1 {
 		font-size: var(--text-3xl);
+	}
+	.login-tagline {
+		max-width: 30ch;
+		margin: 0 auto;
+		font-size: var(--text-base);
+		color: var(--text-secondary);
+		line-height: var(--leading-snug);
 	}
 	.login-form {
 		display: flex;
