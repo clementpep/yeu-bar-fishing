@@ -64,13 +64,25 @@
 		}
 	];
 
+	// Mélange (Fisher-Yates) — la bonne réponse ne doit pas toujours occuper la même place.
+	function shuffle<T>(arr: T[]): T[] {
+		const a = [...arr];
+		for (let i = a.length - 1; i > 0; i -= 1) {
+			const j = Math.floor(Math.random() * (i + 1));
+			[a[i], a[j]] = [a[j], a[i]];
+		}
+		return a;
+	}
+	const buildDeck = () => questions.map((q) => ({ ...q, options: shuffle(q.options) }));
+
+	let deck = $state(buildDeck());
 	let index = $state(0);
 	let selected = $state<number | null>(null);
 	let score = $state(0);
 	let finished = $state(false);
 	let best = $state<number | null>(null);
 
-	const current = $derived(questions[index]);
+	const current = $derived(deck[index]);
 	const answered = $derived(selected !== null);
 	const isLast = $derived(index === questions.length - 1);
 	const total = questions.length;
@@ -96,6 +108,7 @@
 	}
 
 	function restart() {
+		deck = buildDeck();
 		index = 0;
 		selected = null;
 		score = 0;
