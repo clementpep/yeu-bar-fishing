@@ -48,7 +48,7 @@
 		<h2>Fenêtres conseillées</h2>
 	</div>
 	<ul class="windows">
-		{#each m.windows as w (w.label)}
+		{#each m.windows as w, i (i)}
 			<li class="window">
 				<span class="window-label">{w.label}</span>
 				<span class="window-time tabular-nums">{w.time}</span>
