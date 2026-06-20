@@ -53,5 +53,7 @@
 		letter-spacing: var(--tracking-wide);
 		text-transform: uppercase;
 		color: var(--text-faint);
+		/* Labels courts par convention — on évite tout retour à la ligne qui désaligne la rangée. */
+		white-space: nowrap;
 	}
 </style>

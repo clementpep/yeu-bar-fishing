@@ -34,7 +34,7 @@
 		<StatTile
 			value={data.records.biggestCm ? data.records.biggestCm : '—'}
 			unit={data.records.biggestCm ? 'cm' : ''}
-			label="Plus gros bar"
+			label="Record"
 		/>
 	</Card>
 	<Card variant="inset"><StatTile value={data.records.totalReleased} label="Relâchés" /></Card>
