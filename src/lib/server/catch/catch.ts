@@ -41,6 +41,7 @@ export interface NewCatch {
 	companionIds?: string[];
 	lat?: number | null;
 	lng?: number | null;
+	accuracyM?: number | null;
 	photo?: string | null;
 	notes?: string | null;
 }
@@ -68,6 +69,7 @@ function rowToCatch(row: CatchDbRow, companions: Companion[] = []): Catch {
 		companions,
 		lat: row.lat,
 		lng: row.lng,
+		accuracyM: row.accuracyM,
 		photo: row.photo,
 		notes: row.notes
 	};
@@ -96,6 +98,7 @@ export function createCatch(db: DB, input: NewCatch): Catch {
 		companionsText: input.companionsText ?? null,
 		lat: input.lat ?? null,
 		lng: input.lng ?? null,
+		accuracyM: input.accuracyM ?? null,
 		photo: input.photo ?? null,
 		notes: input.notes ?? null,
 		createdAt: now

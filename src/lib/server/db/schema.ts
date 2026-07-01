@@ -55,6 +55,7 @@ export const catches = sqliteTable('catches', {
 	// Géolocalisation de la prise
 	lat: real('lat'),
 	lng: real('lng'),
+	accuracyM: real('accuracy_m'), // précision GPS en mètres (rayon)
 	// Photo (nom de fichier stocké sur le volume de données)
 	photo: text('photo'),
 	notes: text('notes'),

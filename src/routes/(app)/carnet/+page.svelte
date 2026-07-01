@@ -18,6 +18,7 @@
 	// Géolocalisation (optionnelle) — remplie côté client.
 	let lat = $state('');
 	let lng = $state('');
+	let accuracy = $state<number | null>(null);
 	let geoStatus = $state<'idle' | 'loading' | 'ok' | 'error'>('idle');
 	let photoName = $state('');
 
@@ -27,22 +28,27 @@
 			return;
 		}
 		geoStatus = 'loading';
+		accuracy = null;
+		// enableHighAccuracy + maximumAge:0 : force un relevé GPS frais (pas de cache),
+		// indispensable pour une précision au mètre. 7 décimales ≈ 1 cm (GPS = facteur limitant).
 		navigator.geolocation.getCurrentPosition(
 			(pos) => {
-				lat = pos.coords.latitude.toFixed(6);
-				lng = pos.coords.longitude.toFixed(6);
+				lat = pos.coords.latitude.toFixed(7);
+				lng = pos.coords.longitude.toFixed(7);
+				accuracy = Math.round(pos.coords.accuracy);
 				geoStatus = 'ok';
 			},
 			() => {
 				geoStatus = 'error';
 			},
-			{ enableHighAccuracy: true, timeout: 10000 }
+			{ enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
 		);
 	}
 
 	function clearPosition() {
 		lat = '';
 		lng = '';
+		accuracy = null;
 		geoStatus = 'idle';
 	}
 
@@ -70,14 +76,21 @@
 	const tideLabel = (t: TideTrend | null) =>
 		TIDE_TRENDS.find((x) => x.value === t)?.label ?? null;
 
-	// Cadre (bbox) autour du point pour l'aperçu carte OpenStreetMap.
+	// Cadre (bbox) serré autour du point pour l'aperçu carte OpenStreetMap.
+	// ~60 m de rayon → zoom ~18-19, où quelques mètres sont visibles. La longitude est
+	// corrigée par cos(latitude) pour un cadre carré en distance réelle.
 	function osmEmbed(latN: number, lngN: number): string {
-		const d = 0.01;
-		const bbox = [lngN - d, latN - d, lngN + d, latN + d].map((n) => n.toFixed(5)).join(',');
+		const radiusM = 60;
+		const dLat = radiusM / 111320;
+		const dLng = radiusM / (111320 * Math.cos((latN * Math.PI) / 180));
+		const bbox = [lngN - dLng, latN - dLat, lngN + dLng, latN + dLat]
+			.map((n) => n.toFixed(6))
+			.join(',');
 		return `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${latN},${lngN}`;
 	}
+	// Zoom 19 = niveau le plus détaillé d'OSM (précision au mètre).
 	const osmLink = (latN: number, lngN: number) =>
-		`https://www.openstreetmap.org/?mlat=${latN}&mlon=${lngN}#map=15/${latN}/${lngN}`;
+		`https://www.openstreetmap.org/?mlat=${latN}&mlon=${lngN}#map=19/${latN}/${lngN}`;
 </script>
 
 <header class="page-header">
@@ -217,14 +230,23 @@
 				{#if geoStatus === 'loading'}
 					<span class="geo-status">Localisation…</span>
 				{:else if geoStatus === 'ok'}
-					<span class="geo-status geo-ok">Position enregistrée</span>
+					<span class="geo-status geo-ok">
+						Position enregistrée{accuracy != null ? ` (±${accuracy} m)` : ''}
+					</span>
+					<button type="button" class="geo-clear" onclick={locateMe}>Réessayer</button>
 					<button type="button" class="geo-clear" onclick={clearPosition}>Effacer</button>
 				{:else if geoStatus === 'error'}
 					<span class="geo-status geo-err">Localisation indisponible</span>
 				{/if}
 			</div>
+			{#if geoStatus === 'ok' && accuracy != null && accuracy > 25}
+				<p class="geo-hint">
+					Précision faible (±{accuracy} m) — attends d'avoir un bon signal GPS puis « Réessayer ».
+				</p>
+			{/if}
 			<input type="hidden" name="lat" value={lat} />
 			<input type="hidden" name="lng" value={lng} />
+			<input type="hidden" name="accuracyM" value={accuracy ?? ''} />
 		</div>
 
 		<!-- Photo (option) -->
@@ -316,9 +338,14 @@
 								src={osmEmbed(c.lat, c.lng)}
 								loading="lazy"
 							></iframe>
-							<a class="map-link" href={osmLink(c.lat, c.lng)} target="_blank" rel="noreferrer">
-								Ouvrir dans OpenStreetMap
-							</a>
+							<div class="map-foot">
+								<a class="map-link" href={osmLink(c.lat, c.lng)} target="_blank" rel="noreferrer">
+									Ouvrir dans OpenStreetMap
+								</a>
+								{#if c.accuracyM != null}
+									<span class="map-acc">Précision ±{Math.round(c.accuracyM)} m</span>
+								{/if}
+							</div>
 						</details>
 					{/if}
 
@@ -469,6 +496,11 @@
 		text-decoration: underline;
 		cursor: pointer;
 	}
+	.geo-hint {
+		margin: 0;
+		font-size: var(--text-sm);
+		color: var(--color-danger);
+	}
 	.photo-pick {
 		display: flex;
 		align-items: center;
@@ -588,11 +620,20 @@
 		border-radius: var(--radius-md);
 		margin-top: var(--space-2);
 	}
-	.map-link {
-		display: inline-block;
+	.map-foot {
+		display: flex;
+		align-items: baseline;
+		flex-wrap: wrap;
+		gap: var(--space-2) var(--space-3);
 		margin-top: var(--space-2);
+	}
+	.map-link {
 		font-size: var(--text-sm);
 		color: var(--accent);
+	}
+	.map-acc {
+		font-size: var(--text-xs);
+		color: var(--text-faint);
 	}
 	.catch-cond {
 		font-size: var(--text-sm);

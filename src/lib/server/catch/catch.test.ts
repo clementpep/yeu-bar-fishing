@@ -15,7 +15,7 @@ function freshDb() {
 		technique TEXT, lure_bait TEXT, released INTEGER NOT NULL DEFAULT 0,
 		conditions_json TEXT, place TEXT, tide_trend TEXT, coefficient INTEGER, temp_c REAL,
 		weather_note TEXT, from_boat INTEGER NOT NULL DEFAULT 0, companions_text TEXT,
-		lat REAL, lng REAL, photo TEXT, notes TEXT, created_at INTEGER NOT NULL
+		lat REAL, lng REAL, accuracy_m REAL, photo TEXT, notes TEXT, created_at INTEGER NOT NULL
 	)`);
 	db.run(sql`CREATE TABLE catch_companions (
 		catch_id TEXT NOT NULL, user_id TEXT NOT NULL, PRIMARY KEY (catch_id, user_id)

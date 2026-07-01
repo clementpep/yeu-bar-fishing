@@ -82,6 +82,7 @@ export const actions: Actions = {
 
 		const lat = parseNumber(data.get('lat'), -90, 90);
 		const lng = parseNumber(data.get('lng'), -180, 180);
+		const accuracyM = parseNumber(data.get('accuracyM'), 0, 100000);
 
 		// Potes tagués : on ne garde que des ids d'utilisateurs réellement inscrits.
 		const requested = data
@@ -129,6 +130,7 @@ export const actions: Actions = {
 			companionIds,
 			lat,
 			lng,
+			accuracyM,
 			photo,
 			notes
 		});

@@ -56,6 +56,7 @@ export interface Catch {
 	// Géolocalisation
 	lat: number | null;
 	lng: number | null;
+	accuracyM: number | null;
 	// Photo (option)
 	photo: string | null;
 	notes: string | null;

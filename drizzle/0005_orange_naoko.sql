@@ -1,0 +1,1 @@
+ALTER TABLE `catches` ADD `accuracy_m` real;
