@@ -21,6 +21,11 @@ services:
       - HOST_HEADER=x-forwarded-host
       # Base SQLite persistée sur un volume (survit aux redéploiements) :
       - DATABASE_PATH=/data/data.sqlite
+      # Photos de prises stockées à côté de la base, sur le même volume persistant :
+      - UPLOADS_PATH=/data/uploads
+      # adapter-node limite le corps des requêtes à 512 Ko par défaut : on relève la
+      # limite pour autoriser l'upload d'une photo (cap applicatif : 10 Mo).
+      - BODY_SIZE_LIMIT=12M
     volumes:
       - baryeu-data:/data
     expose:

@@ -4,14 +4,14 @@
 	import IconSavoir from '$lib/components/icons/IconSavoir.svelte';
 	import IconCarnet from '$lib/components/icons/IconCarnet.svelte';
 	import IconDuel from '$lib/components/icons/IconDuel.svelte';
-	import IconProfil from '$lib/components/icons/IconProfil.svelte';
+	import IconMap from '$lib/components/icons/IconMap.svelte';
 
 	const tabs = [
 		{ href: '/', label: 'Le moment', icon: IconMoment },
 		{ href: '/savoir', label: 'Savoir', icon: IconSavoir },
 		{ href: '/carnet', label: 'Carnet', icon: IconCarnet },
-		{ href: '/duel', label: 'Duel', icon: IconDuel },
-		{ href: '/profil', label: 'Profil', icon: IconProfil }
+		{ href: '/map', label: 'Carte', icon: IconMap },
+		{ href: '/duel', label: 'Duel', icon: IconDuel }
 	];
 
 	const isActive = (href: string, path: string) =>

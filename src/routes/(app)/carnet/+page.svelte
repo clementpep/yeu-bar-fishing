@@ -196,11 +196,6 @@
 			</div>
 		</div>
 
-		<label class="toggle">
-			<input type="checkbox" name="fromBoat" />
-			<span>Depuis le bateau</span>
-		</label>
-
 		<!-- Avec qui : tagger un pote inscrit + noms libres -->
 		<div class="field">
 			<span class="field-label">Avec qui</span>
@@ -218,7 +213,7 @@
 				name="companionsText"
 				type="text"
 				class="field-input"
-				placeholder="Autres (non inscrits)…"
+				placeholder="Autres (non inscrits), séparés par des virgules…"
 			/>
 		</div>
 
@@ -297,10 +292,9 @@
 						{/if}
 					</div>
 
-					{#if c.place || c.tideTrend || c.coefficient != null || c.tempC != null || c.weatherNote || c.fromBoat}
+					{#if c.place || c.tideTrend || c.coefficient != null || c.tempC != null || c.weatherNote}
 						<div class="catch-notes">
 							{#if c.place}<span class="note">📍 {c.place}</span>{/if}
-							{#if c.fromBoat}<span class="note">🚤 Bateau</span>{/if}
 							{#if c.tideTrend}<span class="note">Marée {tideLabel(c.tideTrend)}</span>{/if}
 							{#if c.coefficient != null}<span class="note">Coef {c.coefficient}</span>{/if}
 							{#if c.tempC != null}<span class="note">{c.tempC}°C</span>{/if}
@@ -402,6 +396,7 @@
 		display: flex;
 		flex-direction: column;
 		gap: var(--space-2);
+		min-width: 0; /* autorise le champ à rétrécir dans une grille (pas de débordement) */
 	}
 	.field-label {
 		font-size: var(--text-sm);
@@ -411,6 +406,9 @@
 	.select,
 	.field-input,
 	.textarea {
+		width: 100%;
+		min-width: 0;
+		box-sizing: border-box;
 		min-height: 48px;
 		padding: var(--space-3) var(--space-4);
 		font: inherit;
@@ -433,19 +431,6 @@
 	.select:focus {
 		outline: none;
 		border-color: var(--accent);
-	}
-	.toggle {
-		display: flex;
-		align-items: center;
-		gap: var(--space-3);
-		min-height: 44px;
-		color: var(--text-secondary);
-		font-size: var(--text-base);
-	}
-	.toggle input {
-		width: 20px;
-		height: 20px;
-		accent-color: var(--accent);
 	}
 	.friends {
 		display: flex;

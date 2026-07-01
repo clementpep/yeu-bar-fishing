@@ -76,7 +76,6 @@ export const actions: Actions = {
 		const coefficient = parseNumber(data.get('coefficient'), 20, 120);
 		const tempC = parseNumber(data.get('tempC'), -5, 40);
 		const weatherNote = String(data.get('weatherNote') ?? '').trim() || null;
-		const fromBoat = data.get('fromBoat') === 'on';
 		const companionsText = String(data.get('companionsText') ?? '').trim() || null;
 		const notes = String(data.get('notes') ?? '').trim() || null;
 
@@ -125,7 +124,6 @@ export const actions: Actions = {
 			coefficient,
 			tempC,
 			weatherNote,
-			fromBoat,
 			companionsText,
 			companionIds,
 			lat,

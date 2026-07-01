@@ -72,7 +72,6 @@ describe('catch DB', () => {
 			coefficient: 85,
 			tempC: 17.5,
 			weatherNote: 'Ensoleillé',
-			fromBoat: true,
 			companionsText: 'Papy',
 			lat: 46.69,
 			lng: -2.31,
@@ -84,7 +83,6 @@ describe('catch DB', () => {
 		expect(c.tideTrend).toBe('rising');
 		expect(c.coefficient).toBe(85);
 		expect(c.tempC).toBe(17.5);
-		expect(c.fromBoat).toBe(true);
 		expect(c.lat).toBe(46.69);
 		expect(c.photo).toBe('abc.jpg');
 		expect(c.notes).toBe('Belle bagarre');
