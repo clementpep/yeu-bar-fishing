@@ -26,6 +26,19 @@
 			]
 		},
 		{
+			id: 'noeuds',
+			titre: 'Nœuds essentiels',
+			chapeau: 'Cinq nœuds d’hameçon et raccords de bas de ligne à connaître par cœur.',
+			points: [
+				'Nœud Palomar (hameçon/émerillon) : passe la boucle dans l’œillet, fais un nœud simple, repasse l’hameçon dans la boucle, humidifie et serre. Ultra solide et rapide, même sur tresse.',
+				'Clinch amélioré (hameçon/agrafe) : passe le fil dans l’œillet, fais 5–6 tours autour du corps, repasse par la première boucle puis par la grande boucle. Le classique du montage au fluorocarbone.',
+				'Nœud Rapala / nœud de boucle (leurre) : laisse une boucle libre devant le leurre pour une nage plus ample et naturelle. Idéal pour les poissons nageurs et stickbaits.',
+				'Nœud Uni / Grinner (polyvalent) : 5 tours du brin autour du corps de ligne à l’intérieur d’une boucle, puis serre. Fiable sur tresse comme fluoro, base du Double Uni.',
+				'Nœud FG (raccord tresse ↔ fluorocarbone) : le plus fin et le plus résistant pour relier le corps tressé au bas de ligne fluoro. Passe dans les anneaux sans accrocher — la référence pour le bar aux leurres.',
+				'Double Uni (raccord de deux fils) : deux nœuds Uni face à face que l’on rapproche. Simple et solide pour raccorder corps de ligne et bas de ligne de diamètres proches.'
+			]
+		},
+		{
 			id: 'maree',
 			titre: 'Lire la marée',
 			chapeau: 'Le bar est un chasseur de courant : se placer au bon endroit, au bon moment.',

@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer, real } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, real, primaryKey } from 'drizzle-orm/sqlite-core';
 
 export const users = sqliteTable('users', {
 	id: text('id').primaryKey(),
@@ -44,7 +44,37 @@ export const catches = sqliteTable('catches', {
 	lureBait: text('lure_bait'),
 	released: integer('released', { mode: 'boolean' }).notNull().default(false),
 	conditionsJson: text('conditions_json'),
+	// Notes de pêche saisies manuellement
+	place: text('place'),
+	tideTrend: text('tide_trend'), // 'rising' | 'falling' | 'slack'
+	coefficient: integer('coefficient'),
+	tempC: real('temp_c'),
+	weatherNote: text('weather_note'),
+	fromBoat: integer('from_boat', { mode: 'boolean' }).notNull().default(false),
+	companionsText: text('companions_text'),
+	// Géolocalisation de la prise
+	lat: real('lat'),
+	lng: real('lng'),
+	// Photo (nom de fichier stocké sur le volume de données)
+	photo: text('photo'),
+	notes: text('notes'),
 	createdAt: integer('created_at', { mode: 'timestamp' }).notNull()
 });
 
 export type CatchRow = typeof catches.$inferSelect;
+
+// Potes tagués sur une prise (utilisateurs inscrits).
+export const catchCompanions = sqliteTable(
+	'catch_companions',
+	{
+		catchId: text('catch_id')
+			.notNull()
+			.references(() => catches.id),
+		userId: text('user_id')
+			.notNull()
+			.references(() => users.id)
+	},
+	(t) => [primaryKey({ columns: [t.catchId, t.userId] })]
+);
+
+export type CatchCompanionRow = typeof catchCompanions.$inferSelect;
