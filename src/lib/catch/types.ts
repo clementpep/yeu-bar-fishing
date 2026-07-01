@@ -10,14 +10,28 @@ export const TECHNIQUES = [
 ] as const;
 export type Technique = (typeof TECHNIQUES)[number];
 
+export type TideTrend = 'rising' | 'falling' | 'slack';
+
+export const TIDE_TRENDS: { value: TideTrend; label: string }[] = [
+	{ value: 'rising', label: 'Montante' },
+	{ value: 'falling', label: 'Descendante' },
+	{ value: 'slack', label: 'Étale' }
+];
+
 export interface CatchConditions {
 	coefficient: number;
-	tideTrend: 'rising' | 'falling' | 'slack';
+	tideTrend: TideTrend;
 	score: number;
 	windKmh: number | null;
 	windDirDeg: number | null;
 	weatherCode: number | null;
 	moonLabel: string;
+}
+
+/** Pote tagué sur une prise (utilisateur inscrit). */
+export interface Companion {
+	id: string;
+	name: string;
 }
 
 export interface Catch {
@@ -30,4 +44,20 @@ export interface Catch {
 	lureBait: string | null;
 	released: boolean;
 	conditions: CatchConditions | null;
+	// Notes de pêche
+	place: string | null;
+	tideTrend: TideTrend | null;
+	coefficient: number | null;
+	tempC: number | null;
+	weatherNote: string | null;
+	fromBoat: boolean;
+	companionsText: string | null;
+	companions: Companion[];
+	// Géolocalisation
+	lat: number | null;
+	lng: number | null;
+	accuracyM: number | null;
+	// Photo (option)
+	photo: string | null;
+	notes: string | null;
 }

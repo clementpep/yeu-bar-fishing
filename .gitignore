@@ -26,5 +26,8 @@ vite.config.ts.timestamp-*
 *.sqlite
 *.sqlite-*
 
+# Photos de prises uploadées (stockées sur le volume de données)
+/uploads
+
 # Données brutes téléchargées pour le fit de marée (non versionnées)
 scripts/.tidedata/
