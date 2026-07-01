@@ -50,7 +50,6 @@ export interface Catch {
 	coefficient: number | null;
 	tempC: number | null;
 	weatherNote: string | null;
-	fromBoat: boolean;
 	companionsText: string | null;
 	companions: Companion[];
 	// Géolocalisation

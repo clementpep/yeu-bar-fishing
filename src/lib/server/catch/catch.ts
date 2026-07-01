@@ -36,7 +36,6 @@ export interface NewCatch {
 	coefficient?: number | null;
 	tempC?: number | null;
 	weatherNote?: string | null;
-	fromBoat?: boolean;
 	companionsText?: string | null;
 	companionIds?: string[];
 	lat?: number | null;
@@ -64,7 +63,6 @@ function rowToCatch(row: CatchDbRow, companions: Companion[] = []): Catch {
 		coefficient: row.coefficient,
 		tempC: row.tempC,
 		weatherNote: row.weatherNote,
-		fromBoat: row.fromBoat,
 		companionsText: row.companionsText,
 		companions,
 		lat: row.lat,
@@ -94,7 +92,6 @@ export function createCatch(db: DB, input: NewCatch): Catch {
 		coefficient: input.coefficient ?? null,
 		tempC: input.tempC ?? null,
 		weatherNote: input.weatherNote ?? null,
-		fromBoat: input.fromBoat ?? false,
 		companionsText: input.companionsText ?? null,
 		lat: input.lat ?? null,
 		lng: input.lng ?? null,

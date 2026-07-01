@@ -13,8 +13,8 @@ describe('TabBar', () => {
 		expect(screen.getByText('Le moment')).toBeInTheDocument();
 		expect(screen.getByText('Savoir')).toBeInTheDocument();
 		expect(screen.getByText('Carnet')).toBeInTheDocument();
+		expect(screen.getByText('Carte')).toBeInTheDocument();
 		expect(screen.getByText('Duel')).toBeInTheDocument();
-		expect(screen.getByText('Profil')).toBeInTheDocument();
 	});
 
 	it('affiche une icône SVG dans chaque onglet', () => {
