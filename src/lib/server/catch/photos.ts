@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { mkdir, writeFile, readFile } from 'node:fs/promises';
+import { mkdir, writeFile, readFile, unlink } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
 // Répertoire de stockage des photos de prises. En prod (Docker), on le place à côté de
@@ -45,6 +45,16 @@ const CONTENT_TYPE: Record<string, string> = {
 	png: 'image/png',
 	webp: 'image/webp'
 };
+
+/** Supprime une photo du disque (best-effort : ignore les erreurs / noms invalides). */
+export async function deletePhoto(name: string | null | undefined): Promise<void> {
+	if (!name || !PHOTO_NAME_RE.test(name)) return;
+	try {
+		await unlink(join(uploadsDir(), name));
+	} catch {
+		// fichier déjà absent : rien à faire
+	}
+}
 
 /** Lit une photo par son nom de fichier. Retourne null si le nom est invalide/introuvable. */
 export async function readPhoto(name: string): Promise<{ body: Buffer; contentType: string } | null> {
