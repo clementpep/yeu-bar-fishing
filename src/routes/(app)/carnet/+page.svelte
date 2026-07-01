@@ -1,110 +1,12 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import Card from '$lib/components/ui/Card.svelte';
-	import Button from '$lib/components/ui/Button.svelte';
-	import TextField from '$lib/components/ui/TextField.svelte';
 	import StatTile from '$lib/components/ui/StatTile.svelte';
-	import { TECHNIQUES, TIDE_TRENDS, MAILLE_BAR_CM, type TideTrend } from '$lib/catch/types';
+	import CatchForm from '$lib/components/catch/CatchForm.svelte';
+	import { TIDE_TRENDS, MAILLE_BAR_CM, type TideTrend } from '$lib/catch/types';
 	import type { PageData, ActionData } from './$types';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
-
-	let lengthStr = $state('');
-	const lengthNum = $derived(Number(lengthStr.replace(',', '.')));
-	const undersized = $derived(
-		Number.isFinite(lengthNum) && lengthNum > 0 && lengthNum < MAILLE_BAR_CM
-	);
-
-	// Géolocalisation (optionnelle) — remplie côté client.
-	let lat = $state('');
-	let lng = $state('');
-	let accuracy = $state<number | null>(null);
-	let geoStatus = $state<'idle' | 'loading' | 'ok' | 'error'>('idle');
-
-	// Photo : compressée côté client avant envoi (évite les uploads lourds/abortés).
-	let photoName = $state('');
-	let photoBlob = $state<Blob | null>(null);
-	let compressing = $state(false);
-
-	// État de soumission (feedback + garde anti double-envoi).
-	let submitting = $state(false);
-	let submitError = $state('');
-
-	function locateMe() {
-		if (!navigator.geolocation) {
-			geoStatus = 'error';
-			return;
-		}
-		geoStatus = 'loading';
-		accuracy = null;
-		// enableHighAccuracy + maximumAge:0 : force un relevé GPS frais (pas de cache),
-		// indispensable pour une précision au mètre. 7 décimales ≈ 1 cm (GPS = facteur limitant).
-		navigator.geolocation.getCurrentPosition(
-			(pos) => {
-				lat = pos.coords.latitude.toFixed(7);
-				lng = pos.coords.longitude.toFixed(7);
-				accuracy = Math.round(pos.coords.accuracy);
-				geoStatus = 'ok';
-			},
-			() => {
-				geoStatus = 'error';
-			},
-			{ enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
-		);
-	}
-
-	function clearPosition() {
-		lat = '';
-		lng = '';
-		accuracy = null;
-		geoStatus = 'idle';
-	}
-
-	// Redimensionne/compresse l'image (max 1280 px, JPEG ~0.72) pour un envoi léger :
-	// quelques centaines de Ko, bien en deçà des limites de taille de requête.
-	async function compressImage(file: File): Promise<Blob> {
-		const maxEdge = 1280;
-		const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
-		const scale = Math.min(1, maxEdge / Math.max(bitmap.width, bitmap.height));
-		const w = Math.max(1, Math.round(bitmap.width * scale));
-		const h = Math.max(1, Math.round(bitmap.height * scale));
-		const canvas = document.createElement('canvas');
-		canvas.width = w;
-		canvas.height = h;
-		const ctx = canvas.getContext('2d');
-		if (!ctx) return file;
-		ctx.drawImage(bitmap, 0, 0, w, h);
-		bitmap.close?.();
-		const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, 'image/jpeg', 0.72));
-		return blob ?? file;
-	}
-
-	async function onPhotoChange(e: Event) {
-		const input = e.currentTarget as HTMLInputElement;
-		const file = input.files && input.files.length ? input.files[0] : null;
-		if (!file) {
-			photoName = '';
-			photoBlob = null;
-			return;
-		}
-		photoName = file.name;
-		compressing = true;
-		try {
-			photoBlob = await compressImage(file);
-		} catch {
-			photoBlob = file; // repli : on envoie l'original
-		} finally {
-			compressing = false;
-		}
-	}
-
-	// Réinitialise le formulaire après un enregistrement réussi.
-	function resetLocalState() {
-		lengthStr = '';
-		clearPosition();
-		photoName = '';
-		photoBlob = null;
-	}
 
 	const dateFmt = new Intl.DateTimeFormat('fr-FR', {
 		timeZone: 'Europe/Paris',
@@ -118,9 +20,46 @@
 	const tideLabel = (t: TideTrend | null) =>
 		TIDE_TRENDS.find((x) => x.value === t)?.label ?? null;
 
+	// Confirmation avant suppression (action définitive).
+	function confirmDelete({ cancel }: { cancel: () => void }) {
+		if (!confirm('Supprimer cette prise ? Cette action est définitive.')) {
+			cancel();
+			return;
+		}
+		return async ({ update }: { update: () => Promise<void> }) => {
+			await update();
+		};
+	}
+
+	// Enregistre une photo existante dans la pellicule (partage) ou la télécharge.
+	async function savePhotoToDevice(name: string) {
+		try {
+			const res = await fetch(`/carnet/photo/${name}`);
+			if (!res.ok) return;
+			const blob = await res.blob();
+			const file = new File([blob], name, { type: blob.type || 'image/jpeg' });
+			const nav = navigator as Navigator & {
+				canShare?: (data?: ShareData) => boolean;
+				share?: (data?: ShareData) => Promise<void>;
+			};
+			if (nav.canShare?.({ files: [file] }) && nav.share) {
+				await nav.share({ files: [file] });
+			} else {
+				const url = URL.createObjectURL(blob);
+				const a = document.createElement('a');
+				a.href = url;
+				a.download = name;
+				document.body.appendChild(a);
+				a.click();
+				a.remove();
+				URL.revokeObjectURL(url);
+			}
+		} catch {
+			// partage annulé / indisponible : rien à faire
+		}
+	}
+
 	// Cadre (bbox) serré autour du point pour l'aperçu carte OpenStreetMap.
-	// ~60 m de rayon → zoom ~18-19, où quelques mètres sont visibles. La longitude est
-	// corrigée par cos(latitude) pour un cadre carré en distance réelle.
 	function osmEmbed(latN: number, lngN: number): string {
 		const radiusM = 60;
 		const dLat = radiusM / 111320;
@@ -130,7 +69,6 @@
 			.join(',');
 		return `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${latN},${lngN}`;
 	}
-	// Zoom 19 = niveau le plus détaillé d'OSM (précision au mètre).
 	const osmLink = (latN: number, lngN: number) =>
 		`https://www.openstreetmap.org/?mlat=${latN}&mlon=${lngN}#map=19/${latN}/${lngN}`;
 </script>
@@ -154,180 +92,14 @@
 
 <Card>
 	<h2 class="block-title">Nouvelle prise</h2>
-	<form
-		method="POST"
+	<CatchForm
 		action="?/add"
-		enctype="multipart/form-data"
-		use:enhance={({ formData, cancel }) => {
-			if (submitting || compressing) {
-				cancel();
-				return;
-			}
-			submitError = '';
-			submitting = true;
-			// Remplace le fichier brut par la version compressée (envoi léger).
-			if (photoBlob) formData.set('photo', photoBlob, 'photo.jpg');
-			return async ({ result, update }) => {
-				submitting = false;
-				if (result.type === 'success') {
-					resetLocalState();
-					await update();
-				} else if (result.type === 'error') {
-					// Erreur réseau/serveur : message clair plutôt qu'un chargement infini.
-					submitError = "L'enregistrement a échoué. Vérifie ta connexion et réessaie.";
-				} else {
-					await update();
-				}
-			};
-		}}
-		class="catch-form"
-	>
-		<TextField label="Taille (cm)" name="lengthCm" type="text" required bind:value={lengthStr} />
-		{#if undersized}
-			<p class="maille" role="status" aria-live="polite">
-				En dessous de la maille ({MAILLE_BAR_CM} cm) — à relâcher.
-			</p>
-		{/if}
-
-		<div class="field">
-			<label class="field-label" for="technique">Technique</label>
-			<select id="technique" name="technique" class="select">
-				<option value="">—</option>
-				{#each TECHNIQUES as t (t)}
-					<option value={t}>{t}</option>
-				{/each}
-			</select>
-		</div>
-
-		<TextField label="Leurre / appât" name="lureBait" type="text" />
-
-		<!-- Notes de pêche -->
-		<TextField label="Lieu (spot)" name="place" type="text" />
-
-		<div class="grid-2">
-			<div class="field">
-				<label class="field-label" for="tideTrend">Marée</label>
-				<select id="tideTrend" name="tideTrend" class="select">
-					<option value="">—</option>
-					{#each TIDE_TRENDS as t (t.value)}
-						<option value={t.value}>{t.label}</option>
-					{/each}
-				</select>
-			</div>
-			<div class="field">
-				<label class="field-label" for="coefficient">Coefficient</label>
-				<input
-					id="coefficient"
-					name="coefficient"
-					type="number"
-					inputmode="numeric"
-					min="20"
-					max="120"
-					class="field-input"
-					value={data.prefill.coefficient ?? ''}
-				/>
-			</div>
-		</div>
-
-		<div class="grid-2">
-			<div class="field">
-				<label class="field-label" for="tempC">Température (°C)</label>
-				<input
-					id="tempC"
-					name="tempC"
-					type="number"
-					inputmode="decimal"
-					step="0.5"
-					class="field-input"
-					value={data.prefill.tempC ?? ''}
-				/>
-			</div>
-			<div class="field">
-				<label class="field-label" for="weatherNote">Météo</label>
-				<input
-					id="weatherNote"
-					name="weatherNote"
-					type="text"
-					class="field-input"
-					placeholder="Ensoleillé, couvert…"
-				/>
-			</div>
-		</div>
-
-		<!-- Avec qui : tagger un pote inscrit + noms libres -->
-		<div class="field">
-			<span class="field-label">Avec qui</span>
-			{#if data.friends.length}
-				<div class="friends">
-					{#each data.friends as f (f.id)}
-						<label class="friend-chip">
-							<input type="checkbox" name="companions" value={f.id} />
-							<span>{f.name}</span>
-						</label>
-					{/each}
-				</div>
-			{/if}
-			<input
-				name="companionsText"
-				type="text"
-				class="field-input"
-				placeholder="Autres (non inscrits), séparés par des virgules…"
-			/>
-		</div>
-
-		<!-- Position de la prise -->
-		<div class="field">
-			<span class="field-label">Position</span>
-			<div class="geo">
-				<Button type="button" variant="ghost" onclick={locateMe}>📍 Ma position</Button>
-				{#if geoStatus === 'loading'}
-					<span class="geo-status">Localisation…</span>
-				{:else if geoStatus === 'ok'}
-					<span class="geo-status geo-ok">
-						Position enregistrée{accuracy != null ? ` (±${accuracy} m)` : ''}
-					</span>
-					<button type="button" class="geo-clear" onclick={locateMe}>Réessayer</button>
-					<button type="button" class="geo-clear" onclick={clearPosition}>Effacer</button>
-				{:else if geoStatus === 'error'}
-					<span class="geo-status geo-err">Localisation indisponible</span>
-				{/if}
-			</div>
-			{#if geoStatus === 'ok' && accuracy != null && accuracy > 25}
-				<p class="geo-hint">
-					Précision faible (±{accuracy} m) — attends d'avoir un bon signal GPS puis « Réessayer ».
-				</p>
-			{/if}
-			<input type="hidden" name="lat" value={lat} />
-			<input type="hidden" name="lng" value={lng} />
-			<input type="hidden" name="accuracyM" value={accuracy ?? ''} />
-		</div>
-
-		<!-- Photo (option) -->
-		<div class="field">
-			<span class="field-label">Photo (option)</span>
-			<label class="photo-pick">
-				<input type="file" name="photo" accept="image/*" onchange={onPhotoChange} />
-				<span>{compressing ? 'Compression…' : photoName || 'Choisir une photo…'}</span>
-			</label>
-		</div>
-
-		<div class="field">
-			<label class="field-label" for="notes">Notes</label>
-			<textarea id="notes" name="notes" class="textarea" rows="2" placeholder="Remarques…"
-			></textarea>
-		</div>
-
-		{#if form?.error}
-			<p class="form-error" role="alert" aria-live="polite">{form.error}</p>
-		{/if}
-		{#if submitError}
-			<p class="form-error" role="alert" aria-live="polite">{submitError}</p>
-		{/if}
-
-		<Button type="submit" disabled={submitting || compressing}>
-			{submitting ? 'Enregistrement…' : 'Enregistrer la prise'}
-		</Button>
-	</form>
+		mode="create"
+		friends={data.friends}
+		prefillCoefficient={data.prefill.coefficient}
+		prefillTempC={data.prefill.tempC}
+		formError={form?.error ?? null}
+	/>
 </Card>
 
 <section class="list" aria-label="Historique des prises">
@@ -411,6 +183,23 @@
 							Coef {c.conditions.coefficient} · score {c.conditions.score} · {c.conditions.moonLabel}
 						</p>
 					{/if}
+
+					<div class="catch-actions">
+						<a class="action-link" href="/carnet/{c.id}">Modifier</a>
+						{#if c.photo}
+							<button type="button" class="action-link" onclick={() => savePhotoToDevice(c.photo!)}>
+								Enregistrer la photo
+							</button>
+						{/if}
+						<form
+							method="POST"
+							action="/carnet/{c.id}?/delete"
+							use:enhance={confirmDelete}
+							class="delete-form"
+						>
+							<button type="submit" class="action-link danger">Supprimer</button>
+						</form>
+					</div>
 				</div>
 			</Card>
 		{/each}
@@ -439,134 +228,6 @@
 	.block-title {
 		font-size: var(--text-xl);
 		margin-bottom: var(--space-4);
-	}
-	.catch-form {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-4);
-	}
-	.grid-2 {
-		display: grid;
-		grid-template-columns: 1fr 1fr;
-		gap: var(--space-3);
-	}
-	.maille {
-		font-size: var(--text-sm);
-		color: var(--color-danger);
-		margin: 0;
-	}
-	.field {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-2);
-		min-width: 0; /* autorise le champ à rétrécir dans une grille (pas de débordement) */
-	}
-	.field-label {
-		font-size: var(--text-sm);
-		letter-spacing: var(--tracking-wide);
-		color: var(--text-secondary);
-	}
-	.select,
-	.field-input,
-	.textarea {
-		width: 100%;
-		min-width: 0;
-		box-sizing: border-box;
-		min-height: 48px;
-		padding: var(--space-3) var(--space-4);
-		font: inherit;
-		font-size: var(--text-base);
-		color: var(--text-primary);
-		background: var(--surface-base);
-		border: 1px solid var(--border-strong);
-		border-radius: var(--radius-md);
-	}
-	.select {
-		padding: 0 var(--space-4);
-	}
-	.textarea {
-		min-height: 64px;
-		resize: vertical;
-		line-height: var(--leading-normal);
-	}
-	.field-input:focus,
-	.textarea:focus,
-	.select:focus {
-		outline: none;
-		border-color: var(--accent);
-	}
-	.friends {
-		display: flex;
-		flex-wrap: wrap;
-		gap: var(--space-2);
-	}
-	.friend-chip {
-		display: inline-flex;
-		align-items: center;
-		gap: var(--space-2);
-		padding: var(--space-2) var(--space-3);
-		border: 1px solid var(--border-strong);
-		border-radius: var(--radius-full);
-		color: var(--text-secondary);
-		font-size: var(--text-sm);
-		cursor: pointer;
-	}
-	.friend-chip input {
-		accent-color: var(--accent);
-	}
-	.friend-chip:has(input:checked) {
-		border-color: var(--accent);
-		color: var(--text-primary);
-	}
-	.geo {
-		display: flex;
-		align-items: center;
-		flex-wrap: wrap;
-		gap: var(--space-3);
-	}
-	.geo-status {
-		font-size: var(--text-sm);
-		color: var(--text-faint);
-	}
-	.geo-ok {
-		color: var(--accent);
-	}
-	.geo-err {
-		color: var(--color-danger);
-	}
-	.geo-clear {
-		background: none;
-		border: none;
-		padding: 0;
-		color: var(--text-faint);
-		font: inherit;
-		font-size: var(--text-sm);
-		text-decoration: underline;
-		cursor: pointer;
-	}
-	.geo-hint {
-		margin: 0;
-		font-size: var(--text-sm);
-		color: var(--color-danger);
-	}
-	.photo-pick {
-		display: flex;
-		align-items: center;
-		gap: var(--space-3);
-		min-height: 48px;
-		padding: 0 var(--space-4);
-		border: 1px dashed var(--border-strong);
-		border-radius: var(--radius-md);
-		color: var(--text-secondary);
-		font-size: var(--text-base);
-		cursor: pointer;
-	}
-	.photo-pick input {
-		display: none;
-	}
-	.form-error {
-		font-size: var(--text-sm);
-		color: var(--color-danger);
 	}
 	.list {
 		display: flex;
@@ -687,5 +348,30 @@
 		font-size: var(--text-sm);
 		color: var(--text-faint);
 		margin: 0;
+	}
+	.catch-actions {
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: var(--space-4);
+		margin-top: var(--space-2);
+		padding-top: var(--space-2);
+		border-top: 1px solid var(--border-subtle);
+	}
+	.delete-form {
+		display: inline;
+	}
+	.action-link {
+		background: none;
+		border: none;
+		padding: 0;
+		font: inherit;
+		font-size: var(--text-sm);
+		color: var(--accent);
+		text-decoration: none;
+		cursor: pointer;
+	}
+	.action-link.danger {
+		color: var(--color-danger);
 	}
 </style>

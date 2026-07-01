@@ -1,7 +1,17 @@
 import { describe, it, expect } from 'vitest';
 import { sql } from 'drizzle-orm';
 import { createDb } from '$lib/server/db';
-import { estimateWeightG, isUndersized, createCatch, listCatches, computeRecords } from './catch';
+import { catchCompanions } from '$lib/server/db/schema';
+import {
+	estimateWeightG,
+	isUndersized,
+	createCatch,
+	listCatches,
+	computeRecords,
+	getCatch,
+	updateCatch,
+	deleteCatch
+} from './catch';
 
 function freshDb() {
 	const db = createDb(':memory:');
@@ -104,5 +114,126 @@ describe('catch DB', () => {
 		const c = listCatches(db, 'u1')[0];
 		const names = c.companions.map((p) => p.name).sort();
 		expect(names).toEqual(['Alice', 'Bob']);
+	});
+});
+
+const baseUpdate = {
+	lengthCm: 50,
+	technique: null,
+	lureBait: null,
+	released: false,
+	place: null,
+	tideTrend: null,
+	coefficient: null,
+	tempC: null,
+	weatherNote: null,
+	companionsText: null,
+	companionIds: [] as string[],
+	lat: null,
+	lng: null,
+	accuracyM: null,
+	notes: null
+};
+
+describe('getCatch / updateCatch / deleteCatch', () => {
+	it('récupère une prise seulement pour son propriétaire', () => {
+		const db = freshDb();
+		seedUser(db, 'u1', 'Moi');
+		const created = createCatch(db, {
+			userId: 'u1',
+			lengthCm: 55,
+			technique: 'Leurre',
+			lureBait: null,
+			released: false,
+			conditions: null
+		});
+		expect(getCatch(db, 'u1', created.id)?.lengthCm).toBe(55);
+		expect(getCatch(db, 'u2', created.id)).toBeNull(); // pas le propriétaire
+		expect(getCatch(db, 'u1', 'inconnu')).toBeNull();
+	});
+
+	it('met à jour les champs et remplace les potes tagués', () => {
+		const db = freshDb();
+		seedUser(db, 'u1', 'Moi');
+		seedUser(db, 'u2', 'Alice');
+		seedUser(db, 'u3', 'Bob');
+		const created = createCatch(db, {
+			userId: 'u1',
+			lengthCm: 40,
+			technique: null,
+			lureBait: null,
+			released: false,
+			conditions: null,
+			companionIds: ['u2']
+		});
+		const ok = updateCatch(db, 'u1', created.id, {
+			...baseUpdate,
+			lengthCm: 62,
+			released: true,
+			place: 'Pointe des Corbeaux',
+			companionIds: ['u3']
+		});
+		expect(ok).toBe(true);
+		const c = getCatch(db, 'u1', created.id)!;
+		expect(c.lengthCm).toBe(62);
+		expect(c.released).toBe(true);
+		expect(c.place).toBe('Pointe des Corbeaux');
+		expect(c.weightEstG).toBe(estimateWeightG(62));
+		expect(c.companions.map((p) => p.name)).toEqual(['Bob']); // Alice remplacée
+	});
+
+	it('ne met pas à jour la prise d’un autre utilisateur', () => {
+		const db = freshDb();
+		seedUser(db, 'u1', 'Moi');
+		const created = createCatch(db, {
+			userId: 'u1',
+			lengthCm: 50,
+			technique: null,
+			lureBait: null,
+			released: false,
+			conditions: null
+		});
+		expect(updateCatch(db, 'u2', created.id, { ...baseUpdate, lengthCm: 99 })).toBe(false);
+		expect(getCatch(db, 'u1', created.id)?.lengthCm).toBe(50);
+	});
+
+	it('photo : conservée si undefined, retirée si null', () => {
+		const db = freshDb();
+		seedUser(db, 'u1', 'Moi');
+		const created = createCatch(db, {
+			userId: 'u1',
+			lengthCm: 50,
+			technique: null,
+			lureBait: null,
+			released: false,
+			conditions: null,
+			photo: 'a.jpg'
+		});
+		updateCatch(db, 'u1', created.id, { ...baseUpdate }); // photo undefined
+		expect(getCatch(db, 'u1', created.id)?.photo).toBe('a.jpg');
+		updateCatch(db, 'u1', created.id, { ...baseUpdate, photo: null }); // retrait
+		expect(getCatch(db, 'u1', created.id)?.photo).toBeNull();
+	});
+
+	it('supprime une prise et renvoie sa photo à effacer', () => {
+		const db = freshDb();
+		seedUser(db, 'u1', 'Moi');
+		seedUser(db, 'u2', 'Alice');
+		const created = createCatch(db, {
+			userId: 'u1',
+			lengthCm: 50,
+			technique: null,
+			lureBait: null,
+			released: false,
+			conditions: null,
+			photo: 'p.jpg',
+			companionIds: ['u2']
+		});
+		expect(deleteCatch(db, 'u2', created.id)).toBeNull(); // pas le propriétaire
+		const res = deleteCatch(db, 'u1', created.id);
+		expect(res?.photo).toBe('p.jpg');
+		expect(getCatch(db, 'u1', created.id)).toBeNull();
+		// le tag de pote a été nettoyé
+		expect(db.select().from(catchCompanions).all()).toHaveLength(0);
 	});
 });

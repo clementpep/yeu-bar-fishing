@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { desc, eq, inArray } from 'drizzle-orm';
+import { and, desc, eq, inArray } from 'drizzle-orm';
 import type { createDb } from '$lib/server/db';
 import { catches, catchCompanions, users } from '$lib/server/db/schema';
 import {
@@ -133,6 +133,95 @@ function loadCompanions(db: DB, catchIds: string[]): Map<string, Companion[]> {
 		map.set(r.catchId, list);
 	}
 	return map;
+}
+
+/** Récupère une prise appartenant à l'utilisateur, ou null. */
+export function getCatch(db: DB, userId: string, id: string): Catch | null {
+	const row = db
+		.select()
+		.from(catches)
+		.where(and(eq(catches.id, id), eq(catches.userId, userId)))
+		.get();
+	if (!row) return null;
+	return rowToCatch(row, loadCompanions(db, [id]).get(id) ?? []);
+}
+
+/** Champs modifiables d'une prise. `photo` : undefined = inchangée, null = retirée. */
+export interface CatchUpdate {
+	lengthCm: number;
+	technique: Technique | null;
+	lureBait: string | null;
+	released: boolean;
+	place: string | null;
+	tideTrend: TideTrend | null;
+	coefficient: number | null;
+	tempC: number | null;
+	weatherNote: string | null;
+	companionsText: string | null;
+	companionIds: string[];
+	lat: number | null;
+	lng: number | null;
+	accuracyM: number | null;
+	notes: string | null;
+	photo?: string | null;
+}
+
+/** Met à jour une prise (si elle appartient à l'utilisateur). Retourne false si absente. */
+export function updateCatch(db: DB, userId: string, id: string, input: CatchUpdate): boolean {
+	const existing = db
+		.select({ id: catches.id })
+		.from(catches)
+		.where(and(eq(catches.id, id), eq(catches.userId, userId)))
+		.get();
+	if (!existing) return false;
+
+	const set: Partial<CatchDbRow> = {
+		lengthCm: input.lengthCm,
+		weightEstG: estimateWeightG(input.lengthCm),
+		technique: input.technique,
+		lureBait: input.lureBait,
+		released: input.released,
+		place: input.place,
+		tideTrend: input.tideTrend,
+		coefficient: input.coefficient,
+		tempC: input.tempC,
+		weatherNote: input.weatherNote,
+		companionsText: input.companionsText,
+		lat: input.lat,
+		lng: input.lng,
+		accuracyM: input.accuracyM,
+		notes: input.notes
+	};
+	// photo : ne toucher la colonne que si explicitement fournie (remplacement ou retrait).
+	if (input.photo !== undefined) set.photo = input.photo;
+
+	db.update(catches).set(set).where(eq(catches.id, id)).run();
+
+	// Remplace l'ensemble des potes tagués.
+	db.delete(catchCompanions).where(eq(catchCompanions.catchId, id)).run();
+	const ids = [...new Set(input.companionIds ?? [])].filter((cid) => cid && cid !== userId);
+	if (ids.length) {
+		db.insert(catchCompanions)
+			.values(ids.map((uid) => ({ catchId: id, userId: uid })))
+			.run();
+	}
+	return true;
+}
+
+/**
+ * Supprime une prise (si elle appartient à l'utilisateur) et ses potes tagués.
+ * Retourne le nom de fichier de la photo à effacer du disque, ou null.
+ */
+export function deleteCatch(db: DB, userId: string, id: string): { photo: string | null } | null {
+	const row = db
+		.select({ photo: catches.photo })
+		.from(catches)
+		.where(and(eq(catches.id, id), eq(catches.userId, userId)))
+		.get();
+	if (!row) return null;
+	db.delete(catchCompanions).where(eq(catchCompanions.catchId, id)).run();
+	db.delete(catches).where(eq(catches.id, id)).run();
+	return { photo: row.photo };
 }
 
 export function listCatches(db: DB, userId: string): Catch[] {
