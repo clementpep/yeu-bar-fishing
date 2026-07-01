@@ -10,7 +10,7 @@ import type {
 import { ILE_DYEU } from './spot';
 import { sunMoonFor } from './moon';
 import { createTideEngine, type ConstituentsFile } from './tide';
-import { getWeather } from './weather';
+import { getWeather, readCachedWeather } from './weather';
 import { computeScore } from './score';
 import { parisMidnight, parisMonth } from '$lib/conditions/tz';
 import constituentsData from './data/port-joinville.constituents.json';
@@ -51,7 +51,11 @@ export function buildTip(trend: TideTrend, sunMoon: SunMoon, score: FishingScore
 	return 'Conditions difficiles : sortie courte conseillée sur les meilleurs créneaux (étales, aube/crépuscule).';
 }
 
-export async function getDayConditions(db: DB, now: Date = new Date()): Promise<DayConditions> {
+export async function getDayConditions(
+	db: DB,
+	now: Date = new Date(),
+	opts: { weatherCacheOnly?: boolean } = {}
+): Promise<DayConditions> {
 	const dayStart = parisMidnight(now);
 	const tides = engine.dayTides(dayStart);
 	const sunMoon = sunMoonFor(now);
@@ -59,9 +63,12 @@ export async function getDayConditions(db: DB, now: Date = new Date()): Promise<
 	let weather = null;
 	let weatherStale = false;
 	try {
-		const res = await getWeather(db);
-		weather = res.weather;
-		weatherStale = res.stale;
+		// cache-only : jamais d'appel réseau (chemins critiques, ex. enregistrement de prise).
+		const res = opts.weatherCacheOnly ? readCachedWeather(db) : await getWeather(db);
+		if (res) {
+			weather = res.weather;
+			weatherStale = res.stale;
+		}
 	} catch {
 		weather = null;
 	}

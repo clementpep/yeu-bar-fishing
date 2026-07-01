@@ -20,7 +20,15 @@
 	let lng = $state('');
 	let accuracy = $state<number | null>(null);
 	let geoStatus = $state<'idle' | 'loading' | 'ok' | 'error'>('idle');
+
+	// Photo : compressée côté client avant envoi (évite les uploads lourds/abortés).
 	let photoName = $state('');
+	let photoBlob = $state<Blob | null>(null);
+	let compressing = $state(false);
+
+	// État de soumission (feedback + garde anti double-envoi).
+	let submitting = $state(false);
+	let submitError = $state('');
 
 	function locateMe() {
 		if (!navigator.geolocation) {
@@ -52,9 +60,42 @@
 		geoStatus = 'idle';
 	}
 
-	function onPhotoChange(e: Event) {
+	// Redimensionne/compresse l'image (max 1280 px, JPEG ~0.72) pour un envoi léger :
+	// quelques centaines de Ko, bien en deçà des limites de taille de requête.
+	async function compressImage(file: File): Promise<Blob> {
+		const maxEdge = 1280;
+		const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
+		const scale = Math.min(1, maxEdge / Math.max(bitmap.width, bitmap.height));
+		const w = Math.max(1, Math.round(bitmap.width * scale));
+		const h = Math.max(1, Math.round(bitmap.height * scale));
+		const canvas = document.createElement('canvas');
+		canvas.width = w;
+		canvas.height = h;
+		const ctx = canvas.getContext('2d');
+		if (!ctx) return file;
+		ctx.drawImage(bitmap, 0, 0, w, h);
+		bitmap.close?.();
+		const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, 'image/jpeg', 0.72));
+		return blob ?? file;
+	}
+
+	async function onPhotoChange(e: Event) {
 		const input = e.currentTarget as HTMLInputElement;
-		photoName = input.files && input.files.length ? input.files[0].name : '';
+		const file = input.files && input.files.length ? input.files[0] : null;
+		if (!file) {
+			photoName = '';
+			photoBlob = null;
+			return;
+		}
+		photoName = file.name;
+		compressing = true;
+		try {
+			photoBlob = await compressImage(file);
+		} catch {
+			photoBlob = file; // repli : on envoie l'original
+		} finally {
+			compressing = false;
+		}
 	}
 
 	// Réinitialise le formulaire après un enregistrement réussi.
@@ -62,6 +103,7 @@
 		lengthStr = '';
 		clearPosition();
 		photoName = '';
+		photoBlob = null;
 	}
 
 	const dateFmt = new Intl.DateTimeFormat('fr-FR', {
@@ -116,10 +158,26 @@
 		method="POST"
 		action="?/add"
 		enctype="multipart/form-data"
-		use:enhance={() => {
+		use:enhance={({ formData, cancel }) => {
+			if (submitting || compressing) {
+				cancel();
+				return;
+			}
+			submitError = '';
+			submitting = true;
+			// Remplace le fichier brut par la version compressée (envoi léger).
+			if (photoBlob) formData.set('photo', photoBlob, 'photo.jpg');
 			return async ({ result, update }) => {
-				if (result.type === 'success') resetLocalState();
-				await update();
+				submitting = false;
+				if (result.type === 'success') {
+					resetLocalState();
+					await update();
+				} else if (result.type === 'error') {
+					// Erreur réseau/serveur : message clair plutôt qu'un chargement infini.
+					submitError = "L'enregistrement a échoué. Vérifie ta connexion et réessaie.";
+				} else {
+					await update();
+				}
 			};
 		}}
 		class="catch-form"
@@ -249,7 +307,7 @@
 			<span class="field-label">Photo (option)</span>
 			<label class="photo-pick">
 				<input type="file" name="photo" accept="image/*" onchange={onPhotoChange} />
-				<span>{photoName || 'Choisir une photo…'}</span>
+				<span>{compressing ? 'Compression…' : photoName || 'Choisir une photo…'}</span>
 			</label>
 		</div>
 
@@ -262,8 +320,13 @@
 		{#if form?.error}
 			<p class="form-error" role="alert" aria-live="polite">{form.error}</p>
 		{/if}
+		{#if submitError}
+			<p class="form-error" role="alert" aria-live="polite">{submitError}</p>
+		{/if}
 
-		<Button type="submit">Enregistrer la prise</Button>
+		<Button type="submit" disabled={submitting || compressing}>
+			{submitting ? 'Enregistrement…' : 'Enregistrer la prise'}
+		</Button>
 	</form>
 </Card>
 
