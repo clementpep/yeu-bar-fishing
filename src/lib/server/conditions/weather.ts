@@ -47,6 +47,19 @@ async function fetchJson<T>(url: string): Promise<T> {
 	return res.json() as Promise<T>;
 }
 
+/**
+ * Lit la météo depuis le cache SANS aucun appel réseau. Renvoie null si le cache est
+ * vide. Utilisé sur les chemins critiques (ex. enregistrement d'une prise) pour ne
+ * jamais bloquer la requête sur une API externe.
+ */
+export function readCachedWeather(db: DB): { weather: WeatherNow; stale: boolean } | null {
+	const row = db.select().from(conditionsCache).where(eq(conditionsCache.id, ILE_DYEU.id)).get();
+	if (!row) return null;
+	const cached = JSON.parse(row.weatherJson) as WeatherNow;
+	cached.fetchedAt = row.fetchedAt;
+	return { weather: cached, stale: true };
+}
+
 export async function getWeather(
 	db: DB,
 	opts: { force?: boolean } = {}

@@ -26,7 +26,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 		tempC: null
 	};
 	try {
-		const c = await getDayConditions(db);
+		// cache-only : le pré-remplissage ne doit jamais bloquer l'affichage du carnet.
+		const c = await getDayConditions(db, new Date(), { weatherCacheOnly: true });
 		prefill = {
 			coefficient: c.tides.coefficient,
 			tempC: c.weather ? Math.round(c.weather.tempC) : null
@@ -107,7 +108,8 @@ export const actions: Actions = {
 
 		let conditions = null;
 		try {
-			conditions = snapshotConditions(await getDayConditions(db));
+			// cache-only : l'enregistrement d'une prise ne doit jamais dépendre du réseau.
+			conditions = snapshotConditions(await getDayConditions(db, new Date(), { weatherCacheOnly: true }));
 		} catch {
 			conditions = null;
 		}
